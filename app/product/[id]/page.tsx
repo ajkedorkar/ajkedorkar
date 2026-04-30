@@ -48,6 +48,24 @@ export default function ProductDetailPage() {
     if (id) loadProduct();
   }, [id]);
 
+  const addToCart = async () => {
+    if (!product) return;
+    const { data: existing } = await supabase
+      .from('cart')
+      .select('*')
+      .eq('product_id', product.id)
+      .eq('user_id', 'guest')
+      .single();
+      
+    if (existing) {
+      await supabase.from('cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+    } else {
+      await supabase.from('cart').insert({ product_id: product.id, quantity: 1, user_id: 'guest' });
+    }
+    alert('✅ কার্টে যোগ হয়েছে!');
+    router.push('/cart');
+  };
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f5f5f5' }}><div style={{ textAlign: 'center' }}><div style={{ fontSize: '48px' }}>⏳</div><p style={{ color: '#999' }}>লোড হচ্ছে...</p></div></div>;
   if (!product) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f5f5f5' }}><div style={{ textAlign: 'center' }}><div style={{ fontSize: '64px' }}>📭</div><p style={{ color: '#999', fontSize: '18px' }}>প্রোডাক্ট পাওয়া যায়নি</p><button onClick={() => router.back()} style={{ marginTop: '16px', padding: '10px 24px', background: '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>← ফিরে যান</button></div></div>;
 
@@ -66,19 +84,16 @@ export default function ProductDetailPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5', fontFamily: 'Arial, sans-serif' }}>
       
-      {/* হেডার */}
       <header style={{ background: 'white', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <button onClick={() => router.back()} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', padding: 0, color: '#333' }}>←</button>
         <h1 style={{ margin: 0, fontSize: '14px', fontWeight: '600', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#333' }}>{product.title}</h1>
-        <span style={{ fontSize: '18px', cursor: 'pointer' }}>🛒</span>
+        <span onClick={() => router.push('/cart')} style={{ fontSize: '18px', cursor: 'pointer' }}>🛒</span>
       </header>
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '10px' }}>
         
-        {/* ইমেজ + ইনফো */}
         <div style={{ background: 'white', borderRadius: '10px', overflow: 'hidden', marginBottom: '8px' }}>
           
-          {/* ইমেজ */}
           <div style={{ position: 'relative', background: '#fafafa' }}>
             {allImages.length > 0 ? (
               <img src={allImages[selectedImage] || allImages[0]} alt={product.title} onClick={() => setZoomImage(allImages[selectedImage] || allImages[0])}
@@ -89,7 +104,6 @@ export default function ProductDetailPage() {
             {discount > 0 && (
               <span style={{ position: 'absolute', top: '8px', left: '8px', background: '#e62e04', color: 'white', padding: '2px 8px', borderRadius: '3px', fontSize: '12px', fontWeight: '700' }}>-{discount}%</span>
             )}
-            {/* থাম্বনেইল */}
             {allImages.length > 1 && (
               <div style={{ display: 'flex', gap: '5px', padding: '6px', justifyContent: 'center' }}>
                 {allImages.map((img, idx) => (
@@ -103,15 +117,12 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* ইনফো */}
           <div style={{ padding: '12px 14px' }}>
             
-            {/* টাইটেল */}
             <h2 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: '600', color: '#222', lineHeight: '1.3' }}>
               {product.title}
             </h2>
 
-            {/* রেটিং + সোল্ড + স্টক - এক লাইনে */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', fontSize: '11px', flexWrap: 'wrap' }}>
               {rating > 0 && <span style={{ color: '#F59E0B', fontWeight: '600' }}>⭐ {rating}</span>}
               {sold > 0 && <span style={{ color: '#999' }}>| 🔥 {sold} বিক্রি</span>}
@@ -119,7 +130,6 @@ export default function ProductDetailPage() {
               {product.category && <span style={{ color: '#999' }}>| 📂 {product.category}</span>}
             </div>
 
-            {/* প্রাইস + ডিসকাউন্ট */}
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '10px' }}>
               <span style={{ fontSize: '22px', fontWeight: '700', color: '#e62e04' }}>৳{product.price?.toLocaleString()}</span>
               {oldPrice > 0 && (
@@ -130,30 +140,27 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* বাটন রো - সব ছোট করে পাশাপাশি */}
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <button style={{
-                flex: 1, padding: '10px', background: '#e62e04', color: 'white',
-                border: 'none', borderRadius: '3px', fontWeight: '600', fontSize: '13px', cursor: 'pointer',
-              }}>কার্টে যোগ করুন</button>
+              <button 
+                onClick={addToCart}
+                style={{
+                  flex: 1, padding: '10px', background: '#e62e04', color: 'white',
+                  border: 'none', borderRadius: '3px', fontWeight: '600', fontSize: '13px', cursor: 'pointer',
+                }}>কার্টে যোগ করুন</button>
               
-              {/* WhatsApp শুধু আইকন */}
               <a href={`https://wa.me/${whatsappNumber}?text=আমি%20${encodeURIComponent(product.title)}%20কিনতে%20চাই%0Aদাম:%20৳${product.price}%0A${shareUrl}`} target="_blank"
                 style={{ padding: '10px', background: '#25D366', borderRadius: '3px', cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
                 <span style={{ fontSize: '18px' }}>💬</span>
               </a>
               
-              {/* Share */}
               <button onClick={() => { navigator.share?.({ title: product.title, text: `${product.title} - ৳${product.price}`, url: shareUrl }); }}
                 style={{ padding: '10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '3px', cursor: 'pointer', fontSize: '16px' }}>📤</button>
               
-              {/* Wishlist */}
               <button style={{ padding: '10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '3px', cursor: 'pointer', fontSize: '16px' }}>❤️</button>
             </div>
           </div>
         </div>
 
-        {/* বিবরণ */}
         {product.description && (
           <div style={{ background: 'white', borderRadius: '10px', padding: '14px', marginBottom: '8px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#222', margin: '0 0 6px 0' }}>📄 বিবরণ</h3>
@@ -161,10 +168,8 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        {/* রিভিউ */}
         <ReviewSection productId={product.id} />
 
-        {/* রিলেটেড */}
         {related.length > 0 && (
           <div style={{ marginTop: '10px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#222', marginBottom: '8px' }}>🔗 সম্পর্কিত</h3>
@@ -183,7 +188,6 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      {/* জুম মোডাল */}
       {zoomImage && (
         <div onClick={() => setZoomImage(null)} style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999,
@@ -197,7 +201,6 @@ export default function ProductDetailPage() {
   );
 }
 
-// ============ রিভিউ কম্পোনেন্ট ============
 function ReviewSection({ productId }: { productId: number }) {
   const [reviews, setReviews] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
