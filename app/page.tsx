@@ -11,20 +11,29 @@ import Categories from '@/components/Categories';
 import ProductGrid from '@/components/ProductGrid';
 import MobileNav from '@/components/MobileNav';
 
+// বাংলা ক্যাটাগরি (তোর ছবি অনুযায়ী)
 const leftCategories = [
-  { icon: '👜', label: 'Bags', slug: 'bags' }, { icon: '👟', label: 'Shoes', slug: 'shoes' }, 
-  { icon: '💍', label: 'Jewelry', slug: 'jewelry' }, { icon: '💄', label: 'Beauty', slug: 'beauty' }, 
-  { icon: '👕', label: 'Mens', slug: 'mens' }, { icon: '👗', label: 'Womens', slug: 'womens' },
-  { icon: '👶', label: 'Baby', slug: 'baby' }, { icon: '🕶️', label: 'Sunglass', slug: 'sunglass' }, 
-  { icon: '📱', label: 'Gadget', slug: 'gadget' },
+  { icon: '🎯', label: 'অফার জোন', slug: 'offer-zone' },
+  { icon: '📱', label: 'মোবাইল', slug: 'mobile' },
+  { icon: '💻', label: 'কম্পিউটার', slug: 'computer' },
+  { icon: '⚡', label: 'ইলেকট্রনিক্স', slug: 'electronics' },
+  { icon: '👗', label: 'ফ্যাশন', slug: 'fashion' },
+  { icon: '🚗', label: 'গাড়ি', slug: 'car' },
+  { icon: '💼', label: 'চাকরি', slug: 'job' },
+  { icon: '🔧', label: 'সার্ভিস', slug: 'service' },
+  { icon: '🏠', label: 'জমি / প্রপার্টি', slug: 'property' },
 ];
 
 const rightCategories = [
-  { icon: '🎧', label: 'Audio', slug: 'audio' }, { icon: '⌚', label: 'Watches', slug: 'watches' },
-  { icon: '📷', label: 'Camera', slug: 'camera' }, { icon: '💻', label: 'Laptops', slug: 'laptops' },
-  { icon: '🎮', label: 'Gaming', slug: 'gaming' }, { icon: '🏠', label: 'Home', slug: 'home' },
-  { icon: '🚲', label: 'Sports', slug: 'sports' }, { icon: '💊', label: 'Health', slug: 'health' },
-  { icon: '🧸', label: 'Toys', slug: 'toys' },
+  { icon: '📢', label: 'তথ্য', slug: 'info' },
+  { icon: '💑', label: 'পাত্র-পাত্রী', slug: 'matrimony' },
+  { icon: '🔑', label: 'ভাড়া / রেন্ট', slug: 'rent' },
+  { icon: '🚑', label: 'জরুরি সেবা', slug: 'emergency' },
+  { icon: '🐄', label: 'পশু', slug: 'animal' },
+  { icon: '🍪', label: 'খাদ্য পণ্য', slug: 'food' },
+  { icon: '🛒', label: 'নিত্যপ্রয়োজনীয়', slug: 'daily-needs' },
+  { icon: '🎁', label: 'উপহার', slug: 'gifts' },
+  { icon: '🔪', label: 'হস্তশিল্প', slug: 'handicraft' },
 ];
 
 export default function Home() {
