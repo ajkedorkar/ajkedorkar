@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import PCHeader from '@/components/PCHeader';
 import MobileHeader from '@/components/MobileHeader';
@@ -27,6 +28,7 @@ const rightCategories = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [typingText, setTypingText] = useState('');
   const [banners, setBanners] = useState<any[]>([]);
@@ -54,7 +56,7 @@ export default function Home() {
   }, []);
 
   const handleCategoryClick = (slug: string) => {
-    alert(`🛍️ "${slug}" ক্যাটাগরি খুলছে!`);
+    router.push(`/category/${slug}`);
   };
 
   return (

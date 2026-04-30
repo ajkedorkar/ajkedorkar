@@ -22,6 +22,7 @@ interface BannerSectionProps {
 export default function BannerSection({ banners }: BannerSectionProps) {
   const [currentBanner, setCurrentBanner] = useState(0);
 
+  // অটো স্লাইড
   useEffect(() => {
     if (banners.length === 0) return;
     const slider = setInterval(() => {
@@ -41,26 +42,31 @@ export default function BannerSection({ banners }: BannerSectionProps) {
     else setCurrentBanner(prev => (prev - 1 + banners.length) % banners.length);
   };
 
-  // ডিফল্ট ব্যানার (Supabase খালি থাকলে)
+  // ডিফল্ট ব্যানার
   const displayBanners = banners.length > 0 ? banners : [
     { id: 1, title: 'AjkeDorkar', subtitle: 'Best Deals in Bangladesh', color: '#e62e04', icon: '🛒' },
   ];
 
   return (
     <div style={{ flex: 1 }}>
+      {/* ব্যানার স্লাইডার */}
       <div style={{ position: 'relative', borderRadius: '4px', overflow: 'hidden' }}>
         <HeroBanner banners={displayBanners} currentBanner={currentBanner} />
         
-        {/* নেভিগেশন */}
+        {/* লেফট অ্যারো */}
         <button onClick={() => handleSwipe('right')} style={{
           position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)',
           background: 'rgba(255,255,255,0.4)', border: 'none', color: 'white',
-          width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '18px', zIndex: 10,
+          width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', 
+          fontSize: '18px', zIndex: 10,
         }}>‹</button>
+        
+        {/* রাইট অ্যারো */}
         <button onClick={() => handleSwipe('left')} style={{
           position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
           background: 'rgba(255,255,255,0.4)', border: 'none', color: 'white',
-          width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '18px', zIndex: 10,
+          width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', 
+          fontSize: '18px', zIndex: 10,
         }}>›</button>
       </div>
 
@@ -68,7 +74,8 @@ export default function BannerSection({ banners }: BannerSectionProps) {
       <div style={{ display: 'flex', justifyContent: 'center', gap: '5px', padding: '8px 0' }}>
         {displayBanners.map((_, i) => (
           <div key={i} onClick={() => setCurrentBanner(i)} style={{
-            width: i === currentBanner ? '18px' : '6px', height: '6px', borderRadius: '3px',
+            width: i === currentBanner ? '18px' : '6px',
+            height: '6px', borderRadius: '3px',
             background: i === currentBanner ? '#e62e04' : '#ccc',
             transition: 'all 0.3s', cursor: 'pointer',
           }} />
