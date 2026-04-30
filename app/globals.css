@@ -1,11 +1,5 @@
 @import "tailwindcss";
 
-:root {
-  --daraz-orange: #F85606;
-  --daraz-dark: #D44800;
-  --daraz-light: #FFE1D0;
-}
-
 * {
   margin: 0;
   padding: 0;
