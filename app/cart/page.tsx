@@ -241,8 +241,8 @@ export default function CartPage() {
             </div>
             <button 
               onClick={() => {
-                if (selectedItems.length === 0) return alert('কমপক্ষে একটি আইটেম সিলেক্ট করুন!');
-                alert('💰 পেমেন্ট সিস্টেম শীঘ্রই আসছে!');
+  if (selectedItems.length === 0) return alert('কমপক্ষে একটি আইটেম সিলেক্ট করুন!');
+  router.push('/checkout');
               }}
               disabled={selectedItems.length === 0}
               style={{
