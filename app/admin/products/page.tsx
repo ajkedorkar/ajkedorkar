@@ -16,6 +16,28 @@ interface Product {
   is_active?: boolean;
 }
 
+// বাংলা ক্যাটাগরি (হোমপেজের সাথে মিল)
+const categories = [
+  { value: 'offer-zone', label: '🎯 অফার জোন' },
+  { value: 'mobile', label: '📱 মোবাইল' },
+  { value: 'computer', label: '💻 কম্পিউটার' },
+  { value: 'electronics', label: '⚡ ইলেকট্রনিক্স' },
+  { value: 'fashion', label: '👗 ফ্যাশন' },
+  { value: 'car', label: '🚗 গাড়ি' },
+  { value: 'job', label: '💼 চাকরি' },
+  { value: 'service', label: '🔧 সার্ভিস' },
+  { value: 'property', label: '🏠 জমি প্রপার্টি' },
+  { value: 'info', label: '📢 তথ্য' },
+  { value: 'matrimony', label: '💑 পাত্রপাত্রী' },
+  { value: 'rent', label: '🔑 ভাড়া রেন্ট' },
+  { value: 'emergency', label: '🚑 জরুরি সেবা' },
+  { value: 'animal', label: '🐄 পশু' },
+  { value: 'food', label: '🍪 খাদ্য পণ্য' },
+  { value: 'daily-needs', label: '🛒 নিত্যপ্রয়োজনীয়' },
+  { value: 'gifts', label: '🎁 উপহার' },
+  { value: 'handicraft', label: '🔪 হস্তশিল্প' },
+];
+
 export default function ProductAdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,17 +48,11 @@ export default function ProductAdminPage() {
   const [form, setForm] = useState({
     title: '',
     price: '',
-    category: 'mobile',
+    category: 'offer-zone',
     description: '',
     image_url: '',
     webp_url: '',
   });
-
-  const categories = [
-    'offer-zone', 'mobile', 'computer', 'electronics', 'fashion',
-    'car', 'job', 'service', 'property', 'info', 'matrimony',
-    'rent', 'emergency', 'animal', 'food', 'daily-needs', 'gifts', 'handicraft',
-  ];
 
   useEffect(() => { loadProducts(); }, []);
 
@@ -53,11 +69,9 @@ export default function ProductAdminPage() {
     setUploadProgress('🔄 কম্প্রেস হচ্ছে...');
     
     try {
-      // ১. ইমেজ কম্প্রেস
       const compressed = await compressImage(file, 35);
       setUploadProgress('📤 আপলোড হচ্ছে...');
       
-      // ২. Supabase Storage-এ আপলোড
       const fileName = `product_${Date.now()}.webp`;
       const { data, error } = await supabase.storage
         .from('banners')
@@ -68,11 +82,7 @@ export default function ProductAdminPage() {
       
       if (!error && data) {
         const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
-        setForm(prev => ({
-          ...prev,
-          image_url: url,
-          webp_url: url,
-        }));
+        setForm(prev => ({ ...prev, image_url: url, webp_url: url }));
         setUploadProgress('✅ আপলোড সফল!');
       } else {
         setUploadProgress('❌ আপলোড ফেইল!');
@@ -100,7 +110,7 @@ export default function ProductAdminPage() {
     if (!error) {
       loadProducts();
       setShowAdd(false);
-      setForm({ title: '', price: '', category: 'mobile', description: '', image_url: '', webp_url: '' });
+      setForm({ title: '', price: '', category: 'offer-zone', description: '', image_url: '', webp_url: '' });
       alert('✅ প্রোডাক্ট যোগ হয়েছে!');
     } else {
       alert('❌ এরর: ' + error.message);
@@ -117,17 +127,22 @@ export default function ProductAdminPage() {
     <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
       
       {/* হেডার */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
+        background: 'linear-gradient(135deg, #1a1a2e, #0f0f1a)',
+        padding: '20px 24px', borderRadius: '16px', color: 'white',
+      }}>
         <div>
-          <h1 style={{ color: '#222', fontSize: '22px', margin: 0 }}>📦 প্রোডাক্ট ম্যানেজমেন্ট</h1>
-          <p style={{ color: '#666', fontSize: '12px', margin: '2px 0 0' }}>
-            {products.length} টি প্রোডাক্ট | WebP ফরম্যাট | অটো কম্প্রেস
+          <h1 style={{ fontSize: '24px', margin: 0, fontWeight: '800' }}>📦 প্রোডাক্ট ম্যানেজমেন্ট</h1>
+          <p style={{ fontSize: '12px', margin: '4px 0 0', opacity: 0.8 }}>
+            {products.length} টি প্রোডাক্ট · WebP কম্প্রেস · ৩০KB ইমেজ
           </p>
         </div>
         <button onClick={() => setShowAdd(!showAdd)} style={{
-          background: 'linear-gradient(135deg, #1a73e8, #4A90D9)', color: 'white',
-          border: 'none', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer',
-          fontWeight: 'bold', fontSize: '13px',
+          background: 'linear-gradient(135deg, #FFB347, #e62e04)', color: 'white',
+          border: 'none', padding: '12px 24px', borderRadius: '12px', cursor: 'pointer',
+          fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 20px rgba(230,46,4,0.3)',
         }}>
           ➕ নতুন প্রোডাক্ট
         </button>
@@ -136,30 +151,34 @@ export default function ProductAdminPage() {
       {/* অ্যাড ফর্ম */}
       {showAdd && (
         <div style={{
-          background: 'white', padding: '24px', borderRadius: '14px',
-          marginBottom: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+          background: 'white', padding: '28px', borderRadius: '16px',
+          marginBottom: '24px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          border: '1px solid #e8eaed',
         }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#222' }}>➕ নতুন প্রোডাক্ট যোগ করুন</h3>
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', fontWeight: '700', color: '#1a1a2e' }}>
+            ✨ নতুন প্রোডাক্ট যোগ করুন
+          </h3>
           
-          <div style={{ display: 'grid', gap: '14px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'grid', gap: '18px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div>
-                <label style={labelStyle}>📝 টাইটেল</label>
+                <label style={labelStyle}>📝 টাইটেল *</label>
                 <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} 
-                  style={inputStyle} placeholder="প্রোডাক্টের নাম" />
+                  style={inputStyle} placeholder="প্রোডাক্টের নাম লিখুন" />
               </div>
               <div>
-                <label style={labelStyle}>💰 প্রাইস (৳)</label>
+                <label style={labelStyle}>💰 প্রাইস (৳) *</label>
                 <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} 
-                  style={inputStyle} placeholder="যেমন: 1299" />
+                  style={inputStyle} placeholder="যেমন: ১২৯৯" />
               </div>
             </div>
 
             <div>
-              <label style={labelStyle}>🗂️ ক্যাটাগরি</label>
-              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} style={inputStyle}>
+              <label style={labelStyle}>🗂️ ক্যাটাগরি *</label>
+              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} 
+                style={{...inputStyle, cursor: 'pointer', background: '#f8f9fa'}}>
                 {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
               </select>
             </div>
@@ -167,57 +186,61 @@ export default function ProductAdminPage() {
             <div>
               <label style={labelStyle}>📄 বিবরণ</label>
               <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} 
-                style={{...inputStyle, height: '80px', resize: 'vertical'}} placeholder="প্রোডাক্টের বিবরণ..." />
+                style={{...inputStyle, height: '90px', resize: 'vertical'}} placeholder="প্রোডাক্টের বিস্তারিত লিখুন..." />
             </div>
 
             {/* ইমেজ আপলোড */}
             <div>
-              <label style={labelStyle}>🖼️ ইমেজ আপলোড (Auto WebP Compress - Max 35KB)</label>
+              <label style={labelStyle}>🖼️ ইমেজ আপলোড (Auto WebP · Max 35KB)</label>
               <div style={{
-                border: '2px dashed #ddd', borderRadius: '12px', padding: '20px',
-                textAlign: 'center', background: '#fafafa',
-              }}>
-                <input 
-                  type="file" accept="image/*"
+                border: '2px dashed #c4c7cc', borderRadius: '14px', padding: '30px',
+                textAlign: 'center', background: '#fafbfc', transition: 'all 0.3s',
+                cursor: 'pointer',
+              }}
+                onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.borderColor = '#1a73e8'}
+                onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.borderColor = '#c4c7cc'}
+              >
+                <input type="file" accept="image/*"
                   onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }}
-                  style={{ display: 'none' }}
-                  id="image-upload"
+                  style={{ display: 'none' }} id="product-image-upload"
                 />
-                <label htmlFor="image-upload" style={{ cursor: 'pointer' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>📸</div>
-                  <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>ক্লিক করে ইমেজ সিলেক্ট করুন</p>
-                  <p style={{ fontSize: '10px', color: '#999', margin: '4px 0 0' }}>
-                    PNG, JPG, WebP → Auto Compress → ~30KB WebP
+                <label htmlFor="product-image-upload" style={{ cursor: 'pointer' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '10px' }}>📸</div>
+                  <p style={{ fontSize: '14px', color: '#444', margin: 0, fontWeight: '600' }}>
+                    ইমেজ সিলেক্ট করতে ক্লিক করুন
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#888', margin: '6px 0 0' }}>
+                    PNG · JPG · WebP → অটো কম্প্রেস → ≈৩০KB WebP
                   </p>
                 </label>
               </div>
               
               {uploading && (
-                <div style={{ marginTop: '8px', fontSize: '13px', color: '#1a73e8', textAlign: 'center' }}>
+                <div style={{ marginTop: '10px', fontSize: '13px', color: '#1a73e8', textAlign: 'center', fontWeight: '600' }}>
                   {uploadProgress}
                 </div>
               )}
               
               {form.image_url && (
-                <div style={{ marginTop: '10px', position: 'relative', textAlign: 'center' }}>
+                <div style={{ marginTop: '14px', textAlign: 'center' }}>
                   <img src={form.webp_url || form.image_url} 
-                    style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', border: '2px solid #e0e0e0' }} />
-                  <p style={{ fontSize: '10px', color: '#00a651', marginTop: '4px' }}>
+                    style={{ maxWidth: '100%', maxHeight: '220px', borderRadius: '10px', border: '2px solid #e0e0e0' }} />
+                  <p style={{ fontSize: '11px', color: '#00a651', marginTop: '6px', fontWeight: '600' }}>
                     ✅ WebP ফরম্যাটে কম্প্রেসড
                   </p>
                 </div>
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={addProduct} style={{
                 background: 'linear-gradient(135deg, #00a651, #00c853)', color: 'white',
-                border: 'none', padding: '12px 30px', borderRadius: '10px', cursor: 'pointer',
-                fontWeight: 'bold', fontSize: '14px', flex: 1,
+                border: 'none', padding: '14px 32px', borderRadius: '12px', cursor: 'pointer',
+                fontWeight: 'bold', fontSize: '15px', flex: 1, boxShadow: '0 4px 16px rgba(0,166,81,0.3)',
               }}>💾 প্রোডাক্ট সেভ করুন</button>
               <button onClick={() => setShowAdd(false)} style={{
                 background: '#f5f5f5', color: '#666', border: '1px solid #ddd',
-                padding: '12px 30px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px',
+                padding: '14px 32px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px',
               }}>❌ বাতিল</button>
             </div>
           </div>
@@ -225,31 +248,51 @@ export default function ProductAdminPage() {
       )}
 
       {/* প্রোডাক্ট লিস্ট */}
-      <div style={{ display: 'grid', gap: '8px' }}>
+      <div style={{ display: 'grid', gap: '10px' }}>
+        {products.length === 0 && !loading && (
+          <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '14px', color: '#999' }}>
+            <span style={{ fontSize: '48px', display: 'block', marginBottom: '12px' }}>📭</span>
+            <p style={{ fontSize: '15px', fontWeight: '600' }}>কোনো প্রোডাক্ট নেই</p>
+            <p style={{ fontSize: '12px' }}>উপরে "➕ নতুন প্রোডাক্ট" বাটনে ক্লিক করুন</p>
+          </div>
+        )}
         {products.map(p => (
           <div key={p.id} style={{
-            background: 'white', borderRadius: '10px', padding: '12px 16px',
+            background: 'white', borderRadius: '12px', padding: '14px 18px',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            border: '1px solid #eee', flexWrap: 'wrap', gap: '10px',
+            border: '1px solid #e8eaed', flexWrap: 'wrap', gap: '12px',
+            transition: 'all 0.2s',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               {p.image_url ? (
-                <img src={p.webp_url || p.image_url} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
+                <img src={p.webp_url || p.image_url} style={{ 
+                  width: '70px', height: '70px', objectFit: 'cover', borderRadius: '10px',
+                  border: '2px solid #f0f0f0'
+                }} />
               ) : (
-                <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>📦</div>
+                <div style={{ 
+                  width: '70px', height: '70px', borderRadius: '10px', background: 'linear-gradient(135deg, #f0f0f0, #e0e0e0)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' 
+                }}>📦</div>
               )}
               <div>
-                <strong style={{ fontSize: '14px' }}>{p.title}</strong>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
-                  <span style={{ fontSize: '11px', color: '#1a73e8', fontWeight: '600' }}>৳{p.price?.toLocaleString()}</span>
-                  <span style={{ fontSize: '10px', color: '#999' }}>{p.category}</span>
-                  {p.sold !== undefined && <span style={{ fontSize: '10px', color: '#999' }}>{p.sold} sold</span>}
+                <strong style={{ fontSize: '15px', color: '#1a1a2e' }}>{p.title}</strong>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '4px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '12px', color: '#1a73e8', fontWeight: '700' }}>৳{p.price?.toLocaleString()}</span>
+                  <span style={{ 
+                    fontSize: '10px', color: '#666', background: '#f0f0f0', padding: '2px 8px', borderRadius: '12px' 
+                  }}>
+                    {categories.find(c => c.value === p.category)?.label || p.category}
+                  </span>
+                  {p.sold !== undefined && (
+                    <span style={{ fontSize: '10px', color: '#999' }}>{p.sold} SOLD</span>
+                  )}
                 </div>
               </div>
             </div>
             <button onClick={() => deleteProduct(p.id)} style={{
               background: '#fce8e6', color: '#e62e04', border: 'none',
-              padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '11px',
+              padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px',
             }}>🗑️ ডিলিট</button>
           </div>
         ))}
@@ -259,9 +302,9 @@ export default function ProductAdminPage() {
 }
 
 const labelStyle: React.CSSProperties = { 
-  display: 'block', fontSize: '12px', fontWeight: '600', color: '#444', marginBottom: '4px' 
+  display: 'block', fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '6px' 
 };
 const inputStyle: React.CSSProperties = { 
-  width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', 
-  fontSize: '13px', outline: 'none', boxSizing: 'border-box'
+  width: '100%', padding: '11px 16px', borderRadius: '10px', border: '1px solid #ddd', 
+  fontSize: '14px', outline: 'none', boxSizing: 'border-box', transition: 'border 0.2s',
 };
