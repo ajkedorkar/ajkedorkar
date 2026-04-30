@@ -11,7 +11,6 @@ import Categories from '@/components/Categories';
 import ProductGrid from '@/components/ProductGrid';
 import MobileNav from '@/components/MobileNav';
 
-// বাংলা ক্যাটাগরি 
 const leftCategories = [
   { icon: '🎯', label: 'অফার জোন', slug: 'offer-zone' },
   { icon: '📱', label: 'মোবাইল', slug: 'mobile' },
@@ -41,7 +40,32 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typingText, setTypingText] = useState('');
   const [banners, setBanners] = useState<any[]>([]);
+  const [searchPlaceholders, setSearchPlaceholders] = useState<string[]>([
+    "মোবাইল খুঁজুন...",
+    "ফ্যাশন খুঁজুন...",
+    "ইলেকট্রনিক্স খুঁজুন...",
+    "গাড়ি খুঁজুন...",
+    "চাকরি খুঁজুন...",
+  ]);
 
+  // Supabase থেকে ক্যাটাগরি + প্রোডাক্টের নাম লোড
+  useEffect(() => {
+    async function loadPlaceholders() {
+      const [catRes, prodRes] = await Promise.all([
+        supabase.from('categories').select('name').limit(10),
+        supabase.from('products').select('title').limit(10),
+      ]);
+      
+      const items: string[] = [];
+      if (catRes.data) catRes.data.forEach((c: any) => items.push(`${c.name} খুঁজুন...`));
+      if (prodRes.data) prodRes.data.forEach((p: any) => items.push(`${p.title?.slice(0, 25)}...`));
+      
+      if (items.length > 0) setSearchPlaceholders(items);
+    }
+    loadPlaceholders();
+  }, []);
+
+  // ব্যানার লোড
   useEffect(() => {
     async function loadBanners() {
       const { data } = await supabase.from('banners').select('*').eq('is_active', true).order('id');
@@ -50,19 +74,39 @@ export default function Home() {
     loadBanners();
   }, []);
 
+  // টাইপিং অ্যানিমেশন (Supabase থেকে ক্যাটাগরি + প্রোডাক্ট)
   useEffect(() => {
     let i = 0, isDeleting = false;
+    let textIndex = 0;
+
     const typing = setInterval(() => {
-      if (!isDeleting) {
-        if (i < 13) { setTypingText("Search items...".slice(0, i + 1)); i++; }
-        else { isDeleting = true; }
-      } else {
-        if (i > 0) { setTypingText("Search items...".slice(0, i - 1)); i--; }
-        else { isDeleting = false; }
+      if (searchPlaceholders.length === 0) {
+        setTypingText("Search items...");
+        return;
       }
-    }, 100);
+      
+      const fullText = searchPlaceholders[textIndex];
+      
+      if (!isDeleting) {
+        if (i < fullText.length) { 
+          setTypingText(fullText.slice(0, i + 1)); 
+          i++; 
+        } else { 
+          setTimeout(() => { isDeleting = true; }, 1500);
+        }
+      } else {
+        if (i > 0) { 
+          setTypingText(fullText.slice(0, i - 1)); 
+          i--; 
+        } else { 
+          isDeleting = false;
+          textIndex = (textIndex + 1) % searchPlaceholders.length;
+        }
+      }
+    }, 60);
+    
     return () => clearInterval(typing);
-  }, []);
+  }, [searchPlaceholders]);
 
   const handleCategoryClick = (slug: string) => {
     router.push(`/category/${slug}`);
