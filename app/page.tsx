@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import PCHeader from '@/components/PCHeader';
 import MobileHeader from '@/components/MobileHeader';
 import HeroBanner from '@/components/HeroBanner';
@@ -8,14 +9,6 @@ import SidebarCategories from '@/components/SidebarCategories';
 import Categories from '@/components/Categories';
 import ProductGrid from '@/components/ProductGrid';
 import MobileNav from '@/components/MobileNav';
-
-const banners = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
-  title: `PREMIUM OFFER ${i + 1}`,
-  subtitle: 'Exclusive Deals 2026',
-  color: ['#e62e04', '#1a73e8', '#00a651', '#f85606', '#8b5cf6'][i % 5],
-  icon: ['⚡', '👟', '🛒', '🎁', '🔥'][i % 5]
-}));
 
 const leftCategories = [
   { icon: '👜', label: 'Bags' }, { icon: '👟', label: 'Shoes' }, 
@@ -46,7 +39,24 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentBanner, setCurrentBanner] = useState(0);
   const [typingText, setTypingText] = useState('');
+  const [banners, setBanners] = useState<any[]>([]);
 
+  // Supabase থেকে ব্যানার লোড
+  useEffect(() => {
+    async function loadBanners() {
+      const { data } = await supabase
+        .from('banners')
+        .select('*')
+        .eq('is_active', true)
+        .order('id');
+      if (data && data.length > 0) {
+        setBanners(data);
+      }
+    }
+    loadBanners();
+  }, []);
+
+  // টাইপিং অ্যানিমেশন
   useEffect(() => {
     let i = 0, isDeleting = false;
     const typing = setInterval(() => {
@@ -58,9 +68,17 @@ export default function Home() {
         else { isDeleting = false; }
       }
     }, 100);
-    const slider = setInterval(() => setCurrentBanner(prev => (prev + 1) % banners.length), 3000);
-    return () => { clearInterval(typing); clearInterval(slider); };
+    return () => clearInterval(typing);
   }, []);
+
+  // ব্যানার স্লাইড (Supabase থেকে ব্যানার আসলে)
+  useEffect(() => {
+    if (banners.length === 0) return;
+    const slider = setInterval(() => {
+      setCurrentBanner(prev => (prev + 1) % banners.length);
+    }, 3000);
+    return () => clearInterval(slider);
+  }, [banners]);
 
   return (
     <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh', fontFamily: 'Inter, system-ui' }}>
