@@ -18,7 +18,7 @@ interface HeroBannerProps {
 }
 
 export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) {
-  // কোনো ব্যানার না থাকলে
+  // কোনো ব্যানার না থাকলে ডিফল্ট শো করবে
   if (!banners || banners.length === 0) {
     return (
       <div className="hero-banner" style={{ 
@@ -37,7 +37,6 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
   return (
     <div className="hero-banner" style={{ 
       flex: 1, 
-      borderRadius: '4px', 
       overflow: 'hidden', 
       position: 'relative' 
     }}>
@@ -48,7 +47,6 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
         transform: `translateX(-${currentBanner * 100}%)` 
       }}>
         {banners.map(banner => {
-          const pcHeight = banner.banner_height || 350;
           const showBtn = banner.show_button !== false;
           const btnText = banner.button_text || 'Shop Now';
           
@@ -57,7 +55,8 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
               className="banner-slide"
               style={{ 
                 minWidth: '100%', 
-                height: '200px',  // মোবাইলের জন্য ফিক্সড 200px
+                // ডাটাবেসের হাইট থাকলে সেটা, না থাকলে ডিফল্ট ২০০px
+                height: banner.banner_height ? `${banner.banner_height}px` : '200px',
                 background: banner.image_url 
                   ? `url(${banner.image_url}) center/cover no-repeat` 
                   : `linear-gradient(135deg, ${banner.color}, ${banner.color}cc)`, 
@@ -68,7 +67,8 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 color: 'white',
                 position: 'relative',
               }}>
-              {/* ইমেজ ওভারলে */}
+              
+              {/* ইমেজ ওভারলে লজিক */}
               {banner.image_url && (
                 <div style={{
                   position: 'absolute',
@@ -77,7 +77,7 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 }} />
               )}
               
-              {/* কন্টেন্ট */}
+              {/* কন্টেন্ট লজিক - আইকন এবং টেক্সট */}
               <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '15px' }}>
                 {!banner.image_url && (
                   <span className="banner-icon" style={{ fontSize: '40px', display: 'block', marginBottom: '8px' }}>
@@ -86,14 +86,12 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 )}
                 <h2 className="banner-title" style={{ 
                   margin: '0 0 6px 0', 
-                  fontSize: '20px',
                   fontWeight: '800',
                   textShadow: banner.image_url ? '0 2px 10px rgba(0,0,0,0.6)' : 'none',
                 }}>
                   {banner.title}
                 </h2>
                 <p className="banner-subtitle" style={{ 
-                  fontSize: '13px', 
                   margin: '0 0 10px 0',
                   textShadow: banner.image_url ? '0 1px 5px rgba(0,0,0,0.6)' : 'none',
                 }}>
@@ -107,7 +105,6 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                     padding: '8px 20px', 
                     borderRadius: '20px', 
                     fontWeight: '700', 
-                    fontSize: '12px',
                     cursor: 'pointer',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
                   }}>
@@ -120,25 +117,29 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
         })}
       </div>
 
-      {/* CSS for responsive */}
       <style jsx>{`
-        /* PC-তে ব্যানার বড় হবে */
+        /* মোবাইল এর জন্য সাইজ */
+        .banner-title { font-size: 20px; }
+        .banner-subtitle { font-size: 13px; }
+        .banner-btn { font-size: 12px; }
+
         @media (min-width: 1024px) {
+          .hero-banner {
+             border-radius: 8px !important;
+          }
           .banner-slide {
+            /* পিসিতে ডাটাবেস এর ৩৫০ বা ৪০০px হাইট কাজ করবে */
             height: ${banners[0]?.banner_height || 350}px !important;
           }
-          .banner-title {
-            font-size: 28px !important;
-          }
-          .banner-subtitle {
-            font-size: 15px !important;
-          }
-          .banner-btn {
-            padding: 10px 28px !important;
-            font-size: 14px !important;
-          }
-          .banner-icon {
-            font-size: 60px !important;
+          .banner-title { font-size: 28px !important; }
+          .banner-subtitle { font-size: 15px !important; }
+          .banner-btn { padding: 10px 28px !important; font-size: 14px !important; }
+          .banner-icon { font-size: 60px !important; }
+        }
+        
+        @media (max-width: 1023px) {
+          .hero-banner {
+             border-radius: 0px !important;
           }
         }
       `}</style>

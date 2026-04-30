@@ -71,12 +71,12 @@ export default function Home() {
     return () => clearInterval(typing);
   }, []);
 
-  // ব্যানার স্লাইড (Supabase থেকে ব্যানার আসলে)
+  // ব্যানার স্লাইডার
   useEffect(() => {
     if (banners.length === 0) return;
     const slider = setInterval(() => {
       setCurrentBanner(prev => (prev + 1) % banners.length);
-    }, 3000);
+    }, 4000);
     return () => clearInterval(slider);
   }, [banners]);
 
@@ -88,7 +88,12 @@ export default function Home() {
       <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '15px' }}>
         <div className="hero-section" style={{ display: 'flex', gap: '15px' }}>
           <SidebarCategories categories={leftCategories} />
-          <HeroBanner banners={banners} currentBanner={currentBanner} />
+          
+          {/* ব্যানারের জন্য মোবাইল র‍্যাপার */}
+          <div className="mobile-banner-wrapper" style={{ flex: 1 }}>
+            <HeroBanner banners={banners} currentBanner={currentBanner} />
+          </div>
+          
           <SidebarCategories categories={rightCategories} />
         </div>
         
@@ -99,31 +104,41 @@ export default function Home() {
       <MobileNav />
 
       <style jsx global>{`
+        /* ডিফল্ট মোবাইল সেটিংস */
         .pc-header, .pc-sidebar { display: none; }
         .mobile-header, .mobile-nav, .mobile-categories { display: block; }
         .prod-grid { grid-template-columns: repeat(3, 1fr); }
-        .hero-banner { height: 200px !important; }
-        .cat-item:hover .cat-icon { display: inline-block; animation: pulse 0.6s infinite alternate; }
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.3); } }
         
-        @media (min-width: 1024px) {
-          .pc-header { display: block !important; }
-          .pc-sidebar { display: block !important; }
-          .mobile-header, .mobile-nav, .mobile-categories { display: none !important; }
-          .prod-grid { grid-template-columns: repeat(6, 1fr) !important; }
-          .hero-banner { height: 350px !important; }
-          .cat-item:hover { background: #fdf2f0; color: #e62e04; padding-left: 25px !important; transition: all 0.3s; }
-          .prod-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: all 0.3s; }
-        }
-        
+        /* শুধুমাত্র মোবাইল (max-width: 1023px) এর জন্য পরিবর্তন */
         @media (max-width: 1023px) {
-          main { padding-bottom: 70px; }
-          .hero-section { flex-direction: column !important; }
+          main { padding-left: 15px; padding-right: 15px; padding-bottom: 70px; }
+          .hero-section { flex-direction: column !important; gap: 0px !important; }
+          
+          /* ব্যানারকে স্ক্রিনের একদম দুই পাশে লাগানোর ম্যাজিক */
+          .mobile-banner-wrapper { 
+            margin-left: -15px !important; 
+            margin-right: -15px !important; 
+            width: calc(100% + 30px);
+          }
+
           .prod-name { font-size: 11px !important; height: 28px !important; }
           .prod-price { font-size: 13px !important; }
           .prod-card img { height: 130px !important; }
           .prod-card:active { transform: scale(0.96); transition: transform 0.1s; }
         }
+        
+        /* পিসি ভার্সন (আগের মতোই থাকবে, কোনো চেঞ্জ নেই) */
+        @media (min-width: 1024px) {
+          .pc-header { display: block !important; }
+          .pc-sidebar { display: block !important; }
+          .mobile-header, .mobile-nav, .mobile-categories { display: none !important; }
+          .prod-grid { grid-template-columns: repeat(6, 1fr) !important; }
+          .cat-item:hover { background: #fdf2f0; color: #e62e04; padding-left: 25px !important; transition: all 0.3s; }
+          .prod-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: all 0.3s; }
+        }
+
+        .cat-item:hover .cat-icon { display: inline-block; animation: pulse 0.6s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.3); } }
       `}</style>
     </div>
   );
