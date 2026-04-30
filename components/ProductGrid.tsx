@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 const generateDummy = (page: number, limit: number) => {
@@ -14,6 +15,7 @@ const generateDummy = (page: number, limit: number) => {
 };
 
 export default function ProductGrid() {
+  const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -67,10 +69,12 @@ export default function ProductGrid() {
       <div style={{ borderBottom: '2px solid #e62e04', display: 'inline-block', paddingBottom: '5px', fontWeight: 'bold', fontSize: '18px' }}>JUST FOR YOU</div>
       <div className="prod-grid" style={{ display: 'grid', gap: '12px', marginTop: '15px' }}>
         {products.map((p, i) => (
-          <div key={i} className="prod-card" style={{ 
-            background: 'white', borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee',
-            transition: 'all 0.2s', cursor: 'pointer',
-          }}
+          <div key={i} className="prod-card" 
+            onClick={() => p.id && router.push(`/product/${p.id}`)}
+            style={{ 
+              background: 'white', borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee',
+              transition: 'all 0.2s', cursor: 'pointer',
+            }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 20px rgba(0,0,0,0.1)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
           >
@@ -92,20 +96,12 @@ export default function ProductGrid() {
                 {p.name}
               </p>
               
-              {/* রেটিং + স্টক + সোল্ড */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                {p.rating > 0 && (
-                  <span style={{ fontSize: '11px', color: '#FFB347', fontWeight: '600' }}>⭐ {p.rating}</span>
-                )}
-                {p.stock > 0 && (
-                  <span style={{ fontSize: '10px', color: '#888' }}>📦 {p.stock}</span>
-                )}
-                {p.sold > 0 && (
-                  <span style={{ fontSize: '10px', color: '#888' }}>🔥 {p.sold} sold</span>
-                )}
+                {p.rating > 0 && <span style={{ fontSize: '11px', color: '#FFB347', fontWeight: '600' }}>⭐ {p.rating}</span>}
+                {p.stock > 0 && <span style={{ fontSize: '10px', color: '#888' }}>📦 {p.stock}</span>}
+                {p.sold > 0 && <span style={{ fontSize: '10px', color: '#888' }}>🔥 {p.sold} sold</span>}
               </div>
 
-              {/* প্রাইস */}
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '16px', fontWeight: '700', color: '#e62e04' }}>
                   ৳{Number(p.price).toLocaleString()}
