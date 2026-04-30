@@ -11,7 +11,7 @@ import Categories from '@/components/Categories';
 import ProductGrid from '@/components/ProductGrid';
 import MobileNav from '@/components/MobileNav';
 
-// বাংলা ক্যাটাগরি (তোর ছবি অনুযায়ী)
+// বাংলা ক্যাটাগরি 
 const leftCategories = [
   { icon: '🎯', label: 'অফার জোন', slug: 'offer-zone' },
   { icon: '📱', label: 'মোবাইল', slug: 'mobile' },
@@ -73,12 +73,21 @@ export default function Home() {
       <PCHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <MobileHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       
-      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '15px' }}>
+      <main className="main-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '15px' }}>
         <div className="hero-section" style={{ display: 'flex', gap: '15px' }}>
-          <SidebarCategories categories={leftCategories} onCategoryClick={handleCategoryClick} />
-          <BannerSection banners={banners} />
-          <SidebarCategories categories={rightCategories} onCategoryClick={handleCategoryClick} />
+          <div className="pc-sidebar-left">
+            <SidebarCategories categories={leftCategories} onCategoryClick={handleCategoryClick} />
+          </div>
+          
+          <div className="mobile-banner-fix" style={{ flex: 1, position: 'relative' }}>
+            <BannerSection banners={banners} />
+          </div>
+          
+          <div className="pc-sidebar-right">
+            <SidebarCategories categories={rightCategories} onCategoryClick={handleCategoryClick} />
+          </div>
         </div>
+        
         <Categories categories={[...leftCategories, ...rightCategories]} onCategoryClick={handleCategoryClick} />
         <ProductGrid />
       </main>
@@ -90,15 +99,37 @@ export default function Home() {
         .mobile-header, .mobile-nav, .mobile-categories { display: block; }
         .prod-grid { grid-template-columns: repeat(3, 1fr); }
         .hero-banner { height: 200px !important; }
+        
         @media (min-width: 1024px) {
           .pc-header, .pc-sidebar { display: block !important; }
           .mobile-header, .mobile-nav, .mobile-categories { display: none !important; }
           .prod-grid { grid-template-columns: repeat(6, 1fr) !important; }
           .hero-banner { height: 350px !important; }
+          
+          .pc-sidebar-left, .pc-sidebar-right {
+            width: 260px;
+            flex-shrink: 0;
+            display: block !important;
+          }
+          .mobile-banner-fix {
+            max-width: 780px !important;
+            margin: 0 auto !important;
+          }
         }
+        
         @media (max-width: 1023px) {
-          main { padding-bottom: 70px; }
+          main { padding-bottom: 90px; }
           .hero-section { flex-direction: column !important; }
+          .pc-sidebar-left, .pc-sidebar-right { display: none !important; }
+          
+          .mobile-banner-fix { 
+            margin-left: -15px !important; 
+            margin-right: -15px !important; 
+            width: calc(100% + 30px);
+            display: block !important;
+            overflow: hidden;
+            z-index: 1;
+          }
         }
       `}</style>
     </div>
