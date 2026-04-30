@@ -175,7 +175,10 @@ export default function CategoryPage() {
               gap: '14px',
             }}>
               {products.map((product, i) => (
-                <div key={i} style={{
+                <div key={i} 
+  onClick={() => product.id && router.push(`/product/${product.id}`)}
+  style={{
+    cursor: 'pointer',
                   background: 'white', borderRadius: '10px', overflow: 'hidden',
                   border: '1px solid rgba(0,0,0,0.04)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
