@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+// মূল PCHeader ইমপোর্ট করা হলো
+import PCHeader from '@/components/PCHeader';
 
-// ক্যাটাগরি ম্যাপ
 const categoryMap: Record<string, { label: string; icon: string }> = {
   'offer-zone': { label: 'অফার জোন', icon: '🎯' },
   'mobile': { label: 'মোবাইল', icon: '📱' },
@@ -26,7 +27,6 @@ const categoryMap: Record<string, { label: string; icon: string }> = {
   'handicraft': { label: 'হস্তশিল্প', icon: '🔪' },
 };
 
-// সব ক্যাটাগরি (সাইডবারের জন্য)
 const allCategories = [
   { icon: '🎯', label: 'অফার জোন', slug: 'offer-zone' },
   { icon: '📱', label: 'মোবাইল', slug: 'mobile' },
@@ -51,11 +51,37 @@ const allCategories = [
 export default function CategoryPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params.slug as string || 'offer-zone';
   const category = categoryMap[slug] || { label: slug, icon: '🛍️' };
 
   const [products, setProducts] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typingText, setTypingText] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // সার্চ বারের টাইপিং অ্যানিমেশনের জন্য
+  useEffect(() => {
+    let i = 0, isDeleting = false;
+    const typing = setInterval(() => {
+      const fullText = "Search items...";
+      if (!isDeleting) {
+        if (i < fullText.length) { 
+          setTypingText(fullText.slice(0, i + 1)); 
+          i++; 
+        } else { 
+          isDeleting = true; 
+        }
+      } else {
+        if (i > 0) { 
+          setTypingText(fullText.slice(0, i - 1)); 
+          i--; 
+        } else { 
+          isDeleting = false; 
+        }
+      }
+    }, 100);
+    return () => clearInterval(typing);
+  }, []);
 
   useEffect(() => {
     async function loadProducts() {
@@ -70,15 +96,18 @@ export default function CategoryPage() {
       if (data && data.length > 0) {
         setProducts(data);
       } else {
-        setProducts(
-          Array.from({ length: 12 }, (_, i) => ({
-            id: i + 1,
-            title: `${category.label} প্রোডাক্ট ${i + 1}`,
-            price: Math.floor(Math.random() * 3000) + 500,
-            image_url: `https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&sig=${i}`,
-            sold: Math.floor(Math.random() * 2000) + 10,
-          }))
-        );
+        // রিয়েল লেডিস আইটেম, শাড়ি ও ব্র্যান্ডের রিয়েল প্রোডাক্ট ডাটা
+        const sampleProducts = [
+          { id: 1, title: 'Traditional Premium Kanjivaram Silk Saree', price: 4500, image_url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500', sold: 420 },
+          { id: 2, title: 'Elegant Floral Georgette Salwar Kameez', price: 2850, image_url: 'https://images.unsplash.com/photo-1610030469980-44ea657d4049?w=500', sold: 380 },
+          { id: 3, title: 'Designer Embroidered Party Wear Saree', price: 5800, image_url: 'https://images.unsplash.com/photo-1595777457583-95e07b227c19?w=500', sold: 195 },
+          { id: 4, title: 'Ladies Soft Leather Handbag Premium Collection', price: 2450, image_url: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500', sold: 850 },
+          { id: 5, title: 'Heavy Zari Work Bridal Saree', price: 8900, image_url: 'https://images.unsplash.com/photo-1603566138711-d0061e89e471?w=500', sold: 140 },
+          { id: 6, title: 'Stylish Casual Ladies Shoes & Heels', price: 1800, image_url: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500', sold: 610 },
+          { id: 7, title: 'Cotton Designer Kurti Set for Women', price: 1550, image_url: 'https://images.unsplash.com/photo-1629814101683-113548981604?w=500', sold: 950 },
+          { id: 8, title: 'Premium Golden Party Clutch Bag', price: 1900, image_url: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=500', sold: 320 }
+        ];
+        setProducts(sampleProducts);
       }
       setLoading(false);
     }
@@ -86,42 +115,37 @@ export default function CategoryPage() {
   }, [slug]);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', fontFamily: 'Arial, sans-serif' }}>
-      
-      {/* ===== হেডার ===== */}
-      <header style={{
-        background: '#1a73e8', padding: '12px 20px', color: 'white',
-        display: 'flex', alignItems: 'center', gap: '10px', position: 'sticky', top: 0, zIndex: 100,
-      }}>
-        <button onClick={() => router.push('/')} style={{
-          background: 'none', border: 'none', color: 'white', fontSize: '20px', cursor: 'pointer', padding: 0,
-        }}>←</button>
-        <span style={{ fontSize: '22px' }}>{category.icon}</span>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>
-            SHOWING RESULTS FOR {slug.toUpperCase()}
-          </h1>
-          <p style={{ margin: 0, fontSize: '11px', opacity: 0.8 }}>{products.length} Results</p>
-        </div>
-      </header>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', fontFamily: 'Inter, system-ui' }}>
 
-      {/* ===== মেইন ===== */}
-      <div style={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', padding: '15px', gap: '15px' }}>
-        
-        {/* বাম সাইডবার (PC Only) */}
+      {/* ===== হেডার সেকশন ===== */}
+      <PCHeader 
+        typingText={typingText}
+        searchQuery={searchQuery} 
+        onSearchChange={setSearchQuery} 
+      />
+
+      {/* ===== মেইন লেআউট ===== */}
+      <div className="main-layout" style={{ display: 'flex', maxWidth: '1440px', margin: '0 auto', padding: '20px 15px', gap: '20px' }}>
+
+        {/* বাম সাইডবার (পিসির জন্য) */}
         <div className="cat-sidebar" style={{
-          width: '200px', background: 'white', borderRadius: '6px', padding: '8px 0',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.04)', flexShrink: 0, display: 'none', height: 'fit-content',
+          width: '260px', background: 'white', borderRadius: '10px', padding: '10px 0',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.03)', flexShrink: 0, height: 'fit-content',
+          border: '1px solid rgba(0,0,0,0.03)'
         }}>
           {allCategories.map((cat, i) => (
             <div key={i} onClick={() => router.push(`/category/${cat.slug}`)} style={{
-              padding: '7px 16px', cursor: 'pointer', fontSize: '12px',
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: slug === cat.slug ? '#e8f0fe' : 'transparent',
-              color: slug === cat.slug ? '#1a73e8' : '#555',
-              fontWeight: slug === cat.slug ? '600' : '400',
-            }}>
-              <span style={{ fontSize: '14px' }}>{cat.icon}</span> {cat.label}
+              padding: '10px 18px', cursor: 'pointer', fontSize: '12px',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: slug === cat.slug ? '#fdf2f0' : 'transparent',
+              color: slug === cat.slug ? '#e62e04' : '#444',
+              fontWeight: slug === cat.slug ? '700' : '400',
+              transition: 'all 0.2s ease'
+            }}
+              onMouseEnter={(e) => { if (slug !== cat.slug) e.currentTarget.style.paddingLeft = '22px'; }}
+              onMouseLeave={(e) => { if (slug !== cat.slug) e.currentTarget.style.paddingLeft = '18px'; }}
+            >
+              <span style={{ fontSize: '16px' }}>{cat.icon}</span> {cat.label}
             </div>
           ))}
         </div>
@@ -129,32 +153,47 @@ export default function CategoryPage() {
         {/* প্রোডাক্ট গ্রিড */}
         <div style={{ flex: 1 }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#999' }}>⏳ লোড হচ্ছে...</div>
+            <div style={{ textAlign: 'center', padding: '60px', color: '#999', fontSize: '13px', background: 'white', borderRadius: '10px' }}>
+              ⏳ প্রোডাক্ট লোড হচ্ছে...
+            </div>
           ) : (
             <div className="product-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '10px',
+              gap: '14px',
             }}>
               {products.map((product, i) => (
                 <div key={i} style={{
-                  background: 'white', borderRadius: '6px', overflow: 'hidden',
-                  cursor: 'pointer', border: '1px solid #e8eaed', transition: 'all 0.2s',
+                  background: 'white', borderRadius: '10px', overflow: 'hidden',
+                  border: '1px solid rgba(0,0,0,0.04)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
                 }}
-                  onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)'}
-                  onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.06)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.02)';
+                  }}
                 >
-                  <img src={product.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'}
-                    style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
-                  <div style={{ padding: '10px 12px' }}>
-                    <p style={{ fontSize: '12px', color: '#333', margin: '0 0 6px 0', lineHeight: '1.4', height: '32px', overflow: 'hidden' }}>
-                      {product.title || product.name}
+                  <img 
+                    src={product.image_url} 
+                    alt={product.title} 
+                    style={{ width: '100%', height: '190px', objectFit: 'cover', borderBottom: '1px solid rgba(0,0,0,0.03)' }} 
+                  />
+                  <div style={{ padding: '12px' }}>
+                    <p style={{ fontSize: '12px', color: '#333', margin: '0 0 8px 0', lineHeight: '1.4', height: '34px', overflow: 'hidden', fontWeight: '500' }}>
+                      {product.title}
                     </p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '15px', fontWeight: '700', color: '#1a73e8' }}>
-                        ৳{product.price?.toLocaleString() || '0'}
+                      <span style={{ fontSize: '15px', fontWeight: '800', color: '#e62e04' }}>
+                        ৳{product.price?.toLocaleString()}
                       </span>
-                      <span style={{ fontSize: '10px', color: '#888' }}>{product.sold || 0} SOLD</span>
+                      <span style={{ fontSize: '10px', color: '#888', background: '#f8f9fa', padding: '3px 8px', borderRadius: '6px' }}>
+                        {product.sold} SOLD
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -164,16 +203,15 @@ export default function CategoryPage() {
         </div>
       </div>
 
-      {/* CSS */}
       <style jsx global>{`
         .cat-sidebar { display: none; }
-        .product-grid { grid-template-columns: repeat(2, 1fr); }
+        .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
         
         @media (min-width: 768px) {
           .cat-sidebar { display: block !important; }
-          .product-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .product-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 16px; }
         }
-        
+
         @media (min-width: 1024px) {
           .product-grid { grid-template-columns: repeat(4, 1fr) !important; }
         }
