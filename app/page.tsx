@@ -76,7 +76,7 @@ export default function Home() {
     if (banners.length === 0) return;
     const slider = setInterval(() => {
       setCurrentBanner(prev => (prev + 1) % banners.length);
-    }, 4000);
+    }, 3000);
     return () => clearInterval(slider);
   }, [banners]);
 
@@ -127,7 +127,7 @@ export default function Home() {
           .prod-card:active { transform: scale(0.96); transition: transform 0.1s; }
         }
         
-        /* পিসি ভার্সন (আগের মতোই থাকবে, কোনো চেঞ্জ নেই) */
+        /* পিসি ভার্সন (আগের মতোই থাকবে) */
         @media (min-width: 1024px) {
           .pc-header { display: block !important; }
           .pc-sidebar { display: block !important; }

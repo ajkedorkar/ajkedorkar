@@ -7,7 +7,7 @@ interface Banner {
   color: string;
   icon: string;
   image_url?: string | null;
-  banner_height?: number;
+  banner_height?: number; // ডাটাবেস থেকে আসা হাইট (পিসির জন্য)
   show_button?: boolean;
   button_text?: string;
 }
@@ -18,7 +18,7 @@ interface HeroBannerProps {
 }
 
 export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) {
-  // কোনো ব্যানার না থাকলে ডিফল্ট শো করবে
+  // কোনো ব্যানার না থাকলে ডিফল্ট শো
   if (!banners || banners.length === 0) {
     return (
       <div className="hero-banner" style={{ 
@@ -55,8 +55,7 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
               className="banner-slide"
               style={{ 
                 minWidth: '100%', 
-                // ডাটাবেসের হাইট থাকলে সেটা, না থাকলে ডিফল্ট ২০০px
-                height: banner.banner_height ? `${banner.banner_height}px` : '200px',
+                // নোট: ইনলাইন স্টাইল থেকে হাইট সরিয়ে সিএসএস ক্লাসে নিয়ে গেছি যাতে মোবাইল/পিসি আলাদা কন্ট্রোল করা যায়
                 background: banner.image_url 
                   ? `url(${banner.image_url}) center/cover no-repeat` 
                   : `linear-gradient(135deg, ${banner.color}, ${banner.color}cc)`, 
@@ -68,12 +67,12 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 position: 'relative',
               }}>
               
-              {/* ইমেজ ওভারলে লজিক */}
+              {/* ইমেজ ওভারলে (ডার্ক শ্যাডো) */}
               {banner.image_url && (
                 <div style={{
                   position: 'absolute',
                   top: 0, left: 0, right: 0, bottom: 0,
-                  background: 'rgba(0,0,0,0.35)',
+                  background: 'rgba(0,0,0,0.35)', // আপনার আগের ওভারলে ঠিক রাখা হয়েছে
                 }} />
               )}
               
@@ -87,11 +86,12 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 <h2 className="banner-title" style={{ 
                   margin: '0 0 6px 0', 
                   fontWeight: '800',
-                  textShadow: banner.image_url ? '0 2px 10px rgba(0,0,0,0.6)' : 'none',
+                  textShadow: banner.image_url ? '0 2px 10px rgba(0,0,0,0.6)' : 'none', // আপনার আগের টেক্সট শ্যাডো
                 }}>
                   {banner.title}
                 </h2>
                 <p className="banner-subtitle" style={{ 
+                  fontSize: '13px', // মোবাইলের জন্য ডিফল্ট ছোট ফন্ট
                   margin: '0 0 10px 0',
                   textShadow: banner.image_url ? '0 1px 5px rgba(0,0,0,0.6)' : 'none',
                 }}>
@@ -105,6 +105,7 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                     padding: '8px 20px', 
                     borderRadius: '20px', 
                     fontWeight: '700', 
+                    fontSize: '12px',
                     cursor: 'pointer',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
                   }}>
@@ -118,17 +119,19 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
       </div>
 
       <style jsx>{`
-        /* মোবাইল এর জন্য সাইজ */
+        /* মোবাইলে হাইট আপনার মার্ক অনুযায়ী ২০০ পিক্সেল ফিক্সড */
+        .banner-slide { 
+          height: 200px !important; 
+        }
         .banner-title { font-size: 20px; }
         .banner-subtitle { font-size: 13px; }
-        .banner-btn { font-size: 12px; }
 
         @media (min-width: 1024px) {
           .hero-banner {
              border-radius: 8px !important;
           }
           .banner-slide {
-            /* পিসিতে ডাটাবেস এর ৩৫০ বা ৪০০px হাইট কাজ করবে */
+            /* PC-তে ডাটাবেস এর ৪০০px হাইট কাজ করবে */
             height: ${banners[0]?.banner_height || 350}px !important;
           }
           .banner-title { font-size: 28px !important; }
@@ -137,6 +140,7 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
           .banner-icon { font-size: 60px !important; }
         }
         
+        /* মোবাইলে ফুল উইডথ ট্রিক */
         @media (max-width: 1023px) {
           .hero-banner {
              border-radius: 0px !important;
