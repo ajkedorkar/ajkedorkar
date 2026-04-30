@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-// মূল PCHeader ইমপোর্ট করা হলো
+// পিসি এবং মোবাইল উভয় হেডার ইমপোর্ট করা হলো
 import PCHeader from '@/components/PCHeader';
+import MobileHeader from '@/components/MobileHeader';
 
 const categoryMap: Record<string, { label: string; icon: string }> = {
   'offer-zone': { label: 'অফার জোন', icon: '🎯' },
@@ -96,7 +97,7 @@ export default function CategoryPage() {
       if (data && data.length > 0) {
         setProducts(data);
       } else {
-        // রিয়েল লেডিস আইটেম, শাড়ি ও ব্র্যান্ডের রিয়েল প্রোডাক্ট ডাটা
+        // ডামি বা স্যাম্পল প্রোডাক্ট ডাটা
         const sampleProducts = [
           { id: 1, title: 'Traditional Premium Kanjivaram Silk Saree', price: 4500, image_url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500', sold: 420 },
           { id: 2, title: 'Elegant Floral Georgette Salwar Kameez', price: 2850, image_url: 'https://images.unsplash.com/photo-1610030469980-44ea657d4049?w=500', sold: 380 },
@@ -117,12 +118,23 @@ export default function CategoryPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', fontFamily: 'Inter, system-ui' }}>
 
-      {/* ===== হেডার সেকশন ===== */}
-      <PCHeader 
-        typingText={typingText}
-        searchQuery={searchQuery} 
-        onSearchChange={setSearchQuery} 
-      />
+      {/* ===== পিসির জন্য হেডার সেকশন ===== */}
+      <div className="pc-header-wrapper">
+        <PCHeader 
+          typingText={typingText}
+          searchQuery={searchQuery} 
+          onSearchChange={setSearchQuery} 
+        />
+      </div>
+
+      {/* ===== মোবাইলের জন্য হেডার সেকশন ===== */}
+      <div className="mobile-header-wrapper">
+        <MobileHeader 
+          typingText={typingText}
+          searchQuery={searchQuery} 
+          onSearchChange={setSearchQuery} 
+        />
+      </div>
 
       {/* ===== মেইন লেআউট ===== */}
       <div className="main-layout" style={{ display: 'flex', maxWidth: '1440px', margin: '0 auto', padding: '20px 15px', gap: '20px' }}>
@@ -206,10 +218,14 @@ export default function CategoryPage() {
       <style jsx global>{`
         .cat-sidebar { display: none; }
         .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .mobile-header-wrapper { display: block; }
+        .pc-header-wrapper { display: none; }
         
         @media (min-width: 768px) {
           .cat-sidebar { display: block !important; }
           .product-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 16px; }
+          .mobile-header-wrapper { display: none; }
+          .pc-header-wrapper { display: block; }
         }
 
         @media (min-width: 1024px) {
