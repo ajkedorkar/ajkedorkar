@@ -12,11 +12,10 @@ export default function PCHeader({ typingText, searchQuery, onSearchChange }: PC
   const router = useRouter();
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      alert(`🔍 "${searchQuery}" সার্চ করা হচ্ছে!`);
-      // ভবিষ্যতে: router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
+  if (searchQuery.trim()) {
+    router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+  }
+};
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSearch();

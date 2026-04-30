@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
+
 interface MobileHeaderProps {
   typingText: string;
   searchQuery: string;
@@ -7,6 +9,18 @@ interface MobileHeaderProps {
 }
 
 export default function MobileHeader({ typingText, searchQuery, onSearchChange }: MobileHeaderProps) {
+  const router = useRouter();
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSearch();
+  };
+
   return (
     <header className="mobile-header" style={{ 
       background: '#e62e04', 
@@ -46,11 +60,22 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
           placeholder={typingText}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={handleKeyPress}
           style={{ flex: 1, border: 'none', outline: 'none', fontSize: '13px', color: '#333', background: 'transparent' }} 
         />
         {searchQuery && (
           <span onClick={() => onSearchChange('')} style={{ fontSize: '14px', color: '#999', cursor: 'pointer' }}>✕</span>
         )}
+        <button 
+          onClick={handleSearch}
+          style={{
+            background: '#222', color: 'white', border: 'none',
+            padding: '6px 14px', borderRadius: '20px', fontSize: '12px',
+            fontWeight: '700', cursor: 'pointer',
+          }}
+        >
+          খুঁজুন
+        </button>
       </div>
     </header>
   );
