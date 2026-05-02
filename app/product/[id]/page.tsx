@@ -41,7 +41,7 @@ export default function ProductDetailPage() {
       const { data } = await supabase.from('products').select('*').eq('id', id).single();
       if (data) {
         setProduct(data);
-        setAddedCount(Math.floor(Math.random() * 100) + 20); // ২০-১২০ এর মধ্যে
+        setAddedCount(Math.floor(Math.random() * 100) + 20);
         if (data.category) {
           const { data: relatedData } = await supabase.from('products').select('*').eq('category', data.category).neq('id', data.id).limit(6);
           if (relatedData) setRelated(relatedData);
@@ -52,7 +52,6 @@ export default function ProductDetailPage() {
     if (id) loadProduct();
   }, [id]);
 
-  // সোশ্যাল প্রুফ কাউন্টার অ্যানিমেশন
   useEffect(() => {
     if (addedCount === 0) return;
     let start = 0;
@@ -60,12 +59,8 @@ export default function ProductDetailPage() {
     const step = Math.ceil(addedCount / (duration / 30));
     const timer = setInterval(() => {
       start += step;
-      if (start >= addedCount) {
-        setDisplayCount(addedCount);
-        clearInterval(timer);
-      } else {
-        setDisplayCount(start);
-      }
+      if (start >= addedCount) { setDisplayCount(addedCount); clearInterval(timer); }
+      else { setDisplayCount(start); }
     }, 30);
     return () => clearInterval(timer);
   }, [addedCount]);
@@ -108,21 +103,22 @@ export default function ProductDetailPage() {
   const discount = product.discount ?? 0;
   const rating = product.rating ?? 0;
   const oldPrice = product.old_price ?? 0;
-  const allImages = [product.webp_url || product.image_url].filter(Boolean);
+  const allImages: string[] = [];
+  if (product.webp_url) allImages.push(product.webp_url);
+  else if (product.image_url) allImages.push(product.image_url);
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Arial, sans-serif', paddingBottom: '100px' }}>
       
       {/* ===== ইমেজ সেকশন ===== */}
       <div style={{ position: 'relative', background: '#fafafa' }}>
-        {allImages.length > 0 ? (
-          <img src={allImages[selectedImage] || allImages[0] || ''} alt={product.title}
-            style={{ width: '100%', height: '380px', objectFit: 'contain' }} />
-        ) : (
-          <div style={{ width: '100%', height: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '80px', background: '#fafafa' }}>📦</div>
-        )}
+        <img 
+          src={allImages[selectedImage] || allImages[0] || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'} 
+          alt={product.title}
+          onClick={() => setZoomImage(allImages[selectedImage] || allImages[0] || null)}
+          style={{ width: '100%', height: '380px', objectFit: 'contain', cursor: 'zoom-in' }} 
+        />
 
-        {/* টপ লেফট: ব্যাক + ক্যাটাগরি */}
         <button onClick={() => router.back()} style={{
           position: 'absolute', top: '12px', left: '12px',
           background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%',
@@ -130,17 +126,14 @@ export default function ProductDetailPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>←</button>
 
-        {/* টপ রাইট: শেয়ার + কার্ট + উইশলিস্ট */}
         <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px' }}>
-          <button onClick={() => navigator.share?.({ title: product.title, url: window.location.href })}
-            style={iconBtn}>📤</button>
+          <button onClick={() => navigator.share?.({ title: product.title, url: window.location.href })} style={iconBtn}>📤</button>
           <button onClick={addToCart} style={iconBtn}>🛒</button>
           <button onClick={toggleWishlist} style={{...iconBtn, color: isWishlisted ? '#e62e04' : '#333'}}>
             {isWishlisted ? '❤️' : '🤍'}
           </button>
         </div>
 
-        {/* ডট ইন্ডিকেটর */}
         {allImages.length > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', padding: '8px' }}>
             {allImages.map((_, i) => (
@@ -153,25 +146,17 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      {/* ===== প্রোডাক্ট ইনফো ===== */}
+      {/* ===== ইনফো ===== */}
       <div style={{ padding: '16px' }}>
-        
-        {/* টাইটেল */}
-        <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a2e', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-          {product.title}
-        </h1>
+        <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a2e', margin: '0 0 10px 0', lineHeight: '1.4' }}>{product.title}</h1>
 
-        {/* রেটিং + রেটিং কাউন্ট */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           <span style={{ background: '#00a651', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '700' }}>
             {rating > 0 ? `⭐ ${rating}` : '⭐ New'}
           </span>
-          <span style={{ fontSize: '12px', color: '#666' }}>
-            {rating > 0 ? `${rating} | 3 Ratings` : 'No Ratings'}
-          </span>
+          <span style={{ fontSize: '12px', color: '#666' }}>{rating > 0 ? `${rating} | 3 Ratings` : 'No Ratings'}</span>
         </div>
 
-        {/* প্রাইস */}
         <div style={{ marginBottom: '12px' }}>
           <span style={{ fontSize: '24px', fontWeight: '800', color: '#1a1a2e' }}>৳{product.price?.toLocaleString()}</span>
           {oldPrice > 0 && (
@@ -183,7 +168,6 @@ export default function ProductDetailPage() {
           <p style={{ fontSize: '11px', color: '#00a651', margin: '4px 0 0' }}>(Inclusive of all taxes)</p>
         </div>
 
-        {/* সোশ্যাল প্রুফ - অ্যানিমেটেড কাউন্টার */}
         <div style={{
           background: '#FFF8E1', borderRadius: '8px', padding: '10px 14px',
           display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px',
@@ -194,7 +178,6 @@ export default function ProductDetailPage() {
           people have added this to cart
         </div>
 
-        {/* Product Highlights */}
         {product.description && (
           <div style={{ marginBottom: '14px' }}>
             <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1a1a2e', margin: '0 0 8px 0' }}>📋 Product Highlights</h3>
@@ -202,7 +185,6 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        {/* Product Details */}
         <div style={{ marginBottom: '14px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1a1a2e', margin: '0 0 8px 0' }}>📄 Product Details</h3>
           <div style={{ display: 'grid', gap: '6px' }}>
@@ -214,8 +196,8 @@ export default function ProductDetailPage() {
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
               <span style={{ color: '#888' }}>Stock</span>
-              <span style={{ fontWeight: '600', color: product.stock && product.stock > 0 ? '#00a651' : '#e62e04' }}>
-                {product.stock && product.stock > 0 ? `✅ In Stock (${product.stock})` : '❌ Out of Stock'}
+              <span style={{ fontWeight: '600', color: (product.stock && product.stock > 0) ? '#00a651' : '#e62e04' }}>
+                {(product.stock && product.stock > 0) ? `✅ In Stock (${product.stock})` : '❌ Out of Stock'}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
@@ -226,23 +208,10 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* বাটন */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: 'white', padding: '12px 16px', borderTop: '1px solid #eee',
-        display: 'flex', gap: '10px',
-      }}>
-        <button onClick={addToCart} style={{
-          flex: 1, padding: '14px', background: 'white', color: '#e62e04',
-          border: '2px solid #e62e04', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: 'pointer',
-        }}>ADD TO CART</button>
-        <button onClick={() => router.push('/checkout')} style={{
-          flex: 1, padding: '14px', background: '#e62e04', color: 'white',
-          border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: 'pointer',
-        }}>BUY NOW</button>
-      </div>
+      {/* ===== রিভিউ সেকশন ===== */}
+      <ReviewSection productId={product.id} />
 
-      {/* রিলেটেড */}
+      {/* ===== রিলেটেড ===== */}
       {related.length > 0 && (
         <div style={{ padding: '0 16px 16px', marginTop: '10px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#1a1a2e', marginBottom: '10px' }}>🔗 Related Products</h3>
@@ -261,10 +230,124 @@ export default function ProductDetailPage() {
           </div>
         </div>
       )}
+
+      {/* ===== বটম বাটন ===== */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: 'white', padding: '12px 16px', borderTop: '1px solid #eee',
+        display: 'flex', gap: '10px',
+      }}>
+        <button onClick={addToCart} style={{
+          flex: 1, padding: '14px', background: 'white', color: '#e62e04',
+          border: '2px solid #e62e04', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: 'pointer',
+        }}>ADD TO CART</button>
+        <button onClick={() => router.push('/checkout')} style={{
+          flex: 1, padding: '14px', background: '#e62e04', color: 'white',
+          border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: 'pointer',
+        }}>BUY NOW</button>
+      </div>
+
+      {/* ===== জুম মোডাল ===== */}
+      {zoomImage && (
+        <div onClick={() => setZoomImage(null)} style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '20px',
+        }}>
+          <span onClick={() => setZoomImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '36px' }}>✕</span>
+          <img src={zoomImage} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }
 
+// ===== রিভিউ কম্পোনেন্ট =====
+function ReviewSection({ productId }: { productId: number }) {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ user_name: '', rating: 5, comment: '', image_url: '', webp_url: '' });
+  const [uploading, setUploading] = useState(false);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+
+  useEffect(() => { loadReviews(); }, [productId]);
+
+  async function loadReviews() {
+    const { data } = await supabase.from('reviews').select('*').eq('product_id', productId).order('created_at', { ascending: false });
+    if (data) setReviews(data);
+  }
+
+  async function handleReviewImage(file: File) {
+    setUploading(true);
+    const compressed = await compressImage(file, 30);
+    const fileName = `review_${Date.now()}.webp`;
+    const { data } = await supabase.storage.from('banners').upload(fileName, compressed, { contentType: 'image/webp', upsert: true });
+    if (data) {
+      const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
+      setReviewForm(prev => ({ ...prev, image_url: url, webp_url: url }));
+    }
+    setUploading(false);
+  }
+
+  async function submitReview() {
+    if (!reviewForm.comment) return alert('কমেন্ট লিখুন!');
+    const { error } = await supabase.from('reviews').insert({
+      product_id: productId, user_name: reviewForm.user_name || 'Anonymous',
+      rating: reviewForm.rating, comment: reviewForm.comment,
+      image_url: reviewForm.image_url, webp_url: reviewForm.webp_url,
+    });
+    if (!error) {
+      setReviewForm({ user_name: '', rating: 5, comment: '', image_url: '', webp_url: '' });
+      setShowForm(false); loadReviews(); alert('✅ রিভিউ জমা হয়েছে!');
+    }
+  }
+
+  return (
+    <div style={{ background: 'white', borderRadius: '10px', padding: '14px 16px', marginBottom: '8px', margin: '0 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#222', margin: 0 }}>💬 রিভিউ ({reviews.length})</h3>
+        <button onClick={() => setShowForm(!showForm)} style={{ background: 'white', color: '#e62e04', border: '1px solid #e62e04', padding: '5px 12px', borderRadius: '3px', cursor: 'pointer', fontWeight: '500', fontSize: '11px' }}>✍️ লিখুন</button>
+      </div>
+
+      {showForm && (
+        <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '6px', marginBottom: '10px' }}>
+          <input value={reviewForm.user_name} onChange={e => setReviewForm({...reviewForm, user_name: e.target.value})} placeholder="আপনার নাম" style={revInp} />
+          <div style={{ display: 'flex', gap: '2px', margin: '6px 0' }}>
+            {[1,2,3,4,5].map(s => (
+              <span key={s} onClick={() => setReviewForm({...reviewForm, rating: s})} style={{ fontSize: '20px', cursor: 'pointer', opacity: s <= reviewForm.rating ? 1 : 0.3 }}>⭐</span>
+            ))}
+          </div>
+          <textarea value={reviewForm.comment} onChange={e => setReviewForm({...reviewForm, comment: e.target.value})} placeholder="আপনার মন্তব্য..." style={{...revInp, height: '60px', resize: 'vertical'}} />
+          <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleReviewImage(f); }} style={{ marginTop: '4px', fontSize: '11px', display: 'block' }} />
+          {reviewForm.image_url && <img src={reviewForm.webp_url || reviewForm.image_url} onClick={() => setZoomImage(reviewForm.webp_url || reviewForm.image_url)} style={{ maxWidth: '60px', maxHeight: '60px', borderRadius: '3px', marginTop: '4px', cursor: 'zoom-in' }} />}
+          <button onClick={submitReview} style={{ marginTop: '6px', background: '#e62e04', color: 'white', border: 'none', padding: '6px 16px', borderRadius: '3px', cursor: 'pointer', fontWeight: '600', fontSize: '11px' }}>💾 জমা</button>
+        </div>
+      )}
+
+      {reviews.map(r => (
+        <div key={r.id} style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+            <span style={{ fontWeight: '600', fontSize: '12px', color: '#333' }}>{r.user_name}</span>
+            <span style={{ fontSize: '10px', color: '#F59E0B' }}>{'⭐'.repeat(r.rating ?? 0)}</span>
+          </div>
+          <p style={{ fontSize: '11px', color: '#666', margin: '2px 0' }}>{r.comment}</p>
+          {r.image_url && <img src={r.webp_url || r.image_url} onClick={() => setZoomImage(r.webp_url || r.image_url)} style={{ maxWidth: '50px', maxHeight: '50px', borderRadius: '3px', cursor: 'zoom-in', border: '1px solid #eee' }} />}
+        </div>
+      ))}
+
+      {zoomImage && (
+        <div onClick={() => setZoomImage(null)} style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '20px',
+        }}>
+          <span onClick={() => setZoomImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '36px' }}>✕</span>
+          <img src={zoomImage} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+const revInp: React.CSSProperties = { width: '100%', padding: '6px 8px', borderRadius: '3px', border: '1px solid #ddd', fontSize: '11px', marginBottom: '4px', boxSizing: 'border-box' };
 const iconBtn: React.CSSProperties = {
   background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%',
   width: '32px', height: '32px', cursor: 'pointer', fontSize: '16px',
