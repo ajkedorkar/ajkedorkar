@@ -8,9 +8,32 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (session) router.push('/');
-    });
+    const handleCallback = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (data?.session) {
+        // প্রোফাইল চেক বা তৈরি
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.session.user.id)
+          .single();
+        
+        if (!profile) {
+          await supabase.from('profiles').insert({
+            id: data.session.user.id,
+            full_name: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || '',
+            avatar_url: data.session.user.user_metadata?.avatar_url || '',
+          });
+        }
+        
+        router.push('/');
+      } else {
+        router.push('/auth/login');
+      }
+    };
+    
+    handleCallback();
   }, [router]);
 
   return (

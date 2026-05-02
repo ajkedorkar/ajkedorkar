@@ -13,28 +13,33 @@ export default function AccountPage() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) { router.push('/auth/login'); return; }
-      setUser(data.user);
+      // ✅ getSession() ইউজ কর
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        router.push('/auth/login');
+        return;
+      }
+      const currentUser = sessionData.session.user;
+      setUser(currentUser);
       
       // প্রোফাইল লোড বা তৈরি
-      let { data: profileData } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+      let { data: profileData } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
       if (!profileData) {
         await supabase.from('profiles').insert({
-          id: data.user.id,
-          full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
-          avatar_url: data.user.user_metadata?.avatar_url || '',
+          id: currentUser.id,
+          full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
+          avatar_url: currentUser.user_metadata?.avatar_url || '',
         });
-        profileData = { full_name: data.user.user_metadata?.full_name || '', avatar_url: data.user.user_metadata?.avatar_url || '' };
+        profileData = { full_name: currentUser.user_metadata?.full_name || '', avatar_url: currentUser.user_metadata?.avatar_url || '' };
       }
       setProfile(profileData);
       
-      const { count } = await supabase.from('orders').select('*', { count: 'exact' }).eq('user_id', data.user.id);
+      const { count } = await supabase.from('orders').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
       setOrdersCount(count || 0);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [router]);
 
   if (loading) return <div style={{ textAlign: 'center', padding: '100px' }}>⏳</div>;
   if (!user) return null;
@@ -55,7 +60,6 @@ export default function AccountPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5', fontFamily: 'Arial', paddingBottom: '80px' }}>
       
-      {/* প্রোফাইল হেডার */}
       <div style={{
         background: 'linear-gradient(135deg, #e62e04, #FF6B35)',
         padding: '30px 20px', color: 'white', textAlign: 'center',
@@ -73,13 +77,10 @@ export default function AccountPage() {
             displayName[0]?.toUpperCase() || 'A'
           )}
         </div>
-        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>
-          {displayName}
-        </h1>
+        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>{displayName}</h1>
         <p style={{ margin: '4px 0 0', fontSize: '13px', opacity: 0.9 }}>{user.email}</p>
       </div>
 
-      {/* মেনু */}
       <div style={{ padding: '15px', display: 'grid', gap: '8px' }}>
         {menuItems.map((item, i) => (
           <div key={i}
