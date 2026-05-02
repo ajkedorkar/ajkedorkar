@@ -13,50 +13,31 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// Facebook অরিজিনাল SVG আইকন
-const FacebookIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-  </svg>
-);
-
 export default function LoginPage() {
-  const [loading, setLoading] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function handleGoogleLogin() {
-    setLoading('google');
+    setLoading(true);
     setError('');
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-      if (error) setError('Google লগইন সমস্যা: ' + error.message);
+      if (error) setError('লগইন সমস্যা: ' + error.message);
     } catch (e: any) {
       setError('নেটওয়ার্ক সমস্যা! আবার চেষ্টা করুন।');
     }
-    setLoading('');
-  }
-
-  async function handleFacebookLogin() {
-    setLoading('facebook');
-    setError('');
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      });
-      if (error) setError('Facebook লগইন সমস্যা: ' + error.message);
-    } catch (e: any) {
-      setError('নেটওয়ার্ক সমস্যা! আবার চেষ্টা করুন।');
-    }
-    setLoading('');
+    setLoading(false);
   }
 
   return (
     <div style={{
-      minHeight: '100vh', background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 50%, #e62e04 150%)',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 50%, #e62e04 150%)',
       display: 'flex', justifyContent: 'center', alignItems: 'center',
       fontFamily: 'Arial, sans-serif', padding: '20px',
     }}>
@@ -72,52 +53,58 @@ export default function LoginPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 16px', fontSize: '32px', fontWeight: '800', color: 'white',
           }}>A</div>
-          <h1 style={{ margin: 0, fontSize: '26px', fontWeight: '800', color: '#1a1a2e' }}>AjkeDorkar</h1>
-          <p style={{ color: '#888', fontSize: '14px', marginTop: '6px' }}>লগইন করে শপিং শুরু করুন</p>
+          <h1 style={{ margin: 0, fontSize: '26px', fontWeight: '800', color: '#1a1a2e' }}>
+            AjkeDorkar
+          </h1>
+          <p style={{ color: '#888', fontSize: '14px', marginTop: '6px' }}>
+            লগইন করে শপিং শুরু করুন
+          </p>
         </div>
 
+        {/* এরর */}
         {error && (
           <div style={{
             background: '#FFF0F0', color: '#e62e04', padding: '12px',
             borderRadius: '10px', fontSize: '13px', marginBottom: '16px', textAlign: 'center',
-          }}>{error}</div>
+          }}>
+            {error}
+          </div>
         )}
 
-        {/* Google Button */}
-        <button onClick={handleGoogleLogin} disabled={loading !== ''}
+        {/* Google Login Button */}
+        <button 
+          onClick={handleGoogleLogin} 
+          disabled={loading}
           style={{
-            width: '100%', padding: '14px', border: '2px solid #e0e0e0',
+            width: '100%', padding: '16px', border: '2px solid #e0e0e0',
             borderRadius: '12px', background: 'white', cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: '12px', fontWeight: '600', fontSize: '15px', marginBottom: '12px',
-            opacity: loading && loading !== 'google' ? 0.5 : 1,
-          }}>
-          {loading === 'google' ? (
+            gap: '12px', fontWeight: '600', fontSize: '16px',
+            transition: 'all 0.3s', opacity: loading ? 0.6 : 1,
+          }}
+          onMouseEnter={(e) => {
+            if (!loading) (e.currentTarget as HTMLButtonElement).style.borderColor = '#4285F4';
+            if (!loading) (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 15px rgba(66,133,244,0.2)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#e0e0e0';
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+          }}
+        >
+          {loading ? (
             '⏳ সংযোগ হচ্ছে...'
           ) : (
-            <><GoogleIcon /> Google দিয়ে চালিয়ে যান</>
+            <>
+              <GoogleIcon />
+              Google দিয়ে লগইন করুন
+            </>
           )}
         </button>
 
-        {/* Facebook Button */}
-        <button onClick={handleFacebookLogin} disabled={loading !== ''}
-          style={{
-            width: '100%', padding: '14px', border: 'none',
-            borderRadius: '12px', background: '#1877F2', color: 'white',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: '12px', fontWeight: '600', fontSize: '15px',
-            opacity: loading && loading !== 'facebook' ? 0.5 : 1,
-          }}>
-          {loading === 'facebook' ? (
-            '⏳ সংযোগ হচ্ছে...'
-          ) : (
-            <><FacebookIcon /> Facebook দিয়ে চালিয়ে যান</>
-          )}
-        </button>
-
+        {/* ফুটার */}
         <p style={{
           textAlign: 'center', marginTop: '24px', fontSize: '11px', color: '#999',
+          lineHeight: '1.6',
         }}>
           লগইন করলে আমাদের শর্তাবলী ও প্রাইভেসি পলিসি মেনে নেওয়া হবে
         </p>
