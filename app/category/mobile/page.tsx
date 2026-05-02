@@ -161,7 +161,7 @@ export default function MobileCategoryPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 145px)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
         {/* বাম পাশের ক্যাটাগরি লিস্ট */}
         <div style={{ 
