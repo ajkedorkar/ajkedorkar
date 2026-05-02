@@ -38,6 +38,10 @@ export default function ProductDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typingText, setTypingText] = useState('');
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const imgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadProduct() {
@@ -55,6 +59,13 @@ export default function ProductDetailPage() {
     }
     if (id) loadProduct();
   }, [id]);
+
+  // কার্ট কাউন্ট লোড
+  useEffect(() => { loadCartCount(); }, []);
+  async function loadCartCount() {
+    const { count } = await supabase.from('cart').select('*', { count: 'exact' }).eq('user_id', 'guest');
+    setCartCount(count || 0);
+  }
 
   useEffect(() => {
     if (addedCount === 0) return;
@@ -98,12 +109,27 @@ export default function ProductDetailPage() {
     setIsWishlisted(!isWishlisted);
   }
 
+  // ✅ Supabase-এ রিয়েল কার্টে যোগ
   const addToCart = async () => {
     if (!product) return;
-    const { data: existing } = await supabase.from('cart').select('*').eq('product_id', product.id).eq('user_id', 'guest').single();
-    if (existing) await supabase.from('cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-    else await supabase.from('cart').insert({ product_id: product.id, quantity: 1, user_id: 'guest' });
-    alert('✅ কার্টে যোগ হয়েছে!');
+    setCartLoading(true);
+    
+    const { data: existing } = await supabase
+      .from('cart')
+      .select('*')
+      .eq('product_id', product.id)
+      .eq('user_id', 'guest')
+      .single();
+      
+    if (existing) {
+      await supabase.from('cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+    } else {
+      await supabase.from('cart').insert({ product_id: product.id, quantity: 1, user_id: 'guest' });
+    }
+    
+    await loadCartCount();
+    setCartLoading(false);
+    alert('✅ কার্টে যোগ হয়েছে! (' + (cartCount + 1) + 'টি)');
   };
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>⏳</div>;
@@ -115,85 +141,36 @@ export default function ProductDetailPage() {
   const allImages = [product.webp_url || product.image_url].filter(Boolean);
   const mainImage = allImages[selectedImage] || allImages[0] || '';
 
-  // কমন ইনফো সেকশন
-  const InfoContent = () => (
-    <>
-      <h1 className="product-title">{product.title}</h1>
-
-      <div className="rating-row">
-        <span style={{ background: '#00a651', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '13px', fontWeight: '700' }}>
-          {rating > 0 ? `⭐ ${rating}` : '⭐ New'}
-        </span>
-        <span style={{ fontSize: '13px', color: '#666' }}>{rating > 0 ? `${rating} | 3 Ratings` : ''}</span>
-        {product.sold && product.sold > 0 && <span style={{ fontSize: '12px', color: '#999' }}>| 🔥 {product.sold} Sold</span>}
-        {product.stock && product.stock > 0 && <span style={{ fontSize: '12px', color: '#00a651' }}>| ✅ In Stock</span>}
-      </div>
-
-      <div className="price-row">
-        <span className="current-price">৳{product.price?.toLocaleString()}</span>
-        {oldPrice > 0 && <span className="old-price">৳{oldPrice.toLocaleString()}</span>}
-        {discount > 0 && <span className="discount-badge">-{discount}% OFF</span>}
-        <p style={{ fontSize: '11px', color: '#00a651', margin: '4px 0 0', width: '100%' }}>(Inclusive of all taxes)</p>
-      </div>
-
-      <div className="social-proof">
-        <span>👥</span><strong>{displayCount}+</strong> people have added this to cart
-      </div>
-
-      {product.description && (
-        <div style={{ marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 8px 0' }}>📋 Product Highlights</h3>
-          <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.8' }}>
-            {product.description.split('. ').filter(Boolean).map((line, i) => <div key={i}>• {line}</div>)}
-          </div>
-        </div>
-      )}
-
-      <div style={{ marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 8px 0' }}>📄 Product Details</h3>
-        <div style={{ display: 'grid', gap: '6px' }}>
-          {product.category && <div className="detail-row"><span>Category</span><span>{product.category}</span></div>}
-          <div className="detail-row"><span>Stock</span><span style={{ color: (product.stock && product.stock > 0) ? '#00a651' : '#e62e04' }}>{(product.stock && product.stock > 0) ? `✅ In Stock (${product.stock})` : '❌ Out of Stock'}</span></div>
-          <div className="detail-row"><span>Sold</span><span>🔥 {product.sold || 0}</span></div>
-        </div>
-      </div>
-    </>
-  );
-
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5', fontFamily: 'Arial, sans-serif', paddingBottom: '70px' }}>
       
-      {/* PC HEADER */}
       <div className="pc-hdr"><PCHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} /></div>
-
-      {/* মোবাইল ব্যাক */}
       <button className="mob-back" onClick={() => router.back()}>←</button>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        
         <div className="main-card">
-          
           <div className="flex-container">
             
-            {/* ===== ইমেজ (বামে) ===== */}
+            {/* ইমেজ */}
             <div className="image-col">
-              <div className="zoom-box" onMouseMove={handleMouseMove} onClick={() => setZoomImage(mainImage)}>
+              <div className="zoom-box" ref={imgRef}
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
+                onMouseMove={handleMouseMove}
+                onClick={() => setZoomImage(mainImage)}>
                 <img src={mainImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'} alt={product.title} />
-
-                {/* PC Zoom Lens */}
-                <div className="zoom-lens" style={{ top: `${mousePos.y}%`, left: `${mousePos.x}%` }} />
-                {/* PC Zoom Result */}
+                
+                {/* আমাজন স্টাইল জুম: লেন্স + রেজাল্ট */}
+                <div className="zoom-lens" />
                 <div className="zoom-result" style={{
                   backgroundImage: `url(${mainImage})`,
                   backgroundSize: '250%',
                   backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
                 }} />
-
                 {discount > 0 && <span className="discount-tag">-{discount}%</span>}
               </div>
-
               {allImages.length > 1 && (
-                <div style={{ display: 'flex', gap: '8px', padding: '10px', justifyContent: 'center' }}>
+                <div className="thumb-row">
                   {allImages.map((img, i) => (
                     <div key={i} onClick={() => setSelectedImage(i)} className={`thumb ${selectedImage === i ? 'active' : ''}`}>
                       <img src={zoomImage || ''} alt="" />
@@ -203,28 +180,51 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* ===== ইনফো (ডানে) ===== */}
+            {/* ইনফো */}
             <div className="info-col">
-              
-              {/* মোবাইল অ্যাকশন আইকন */}
               <div className="mob-actions">
-                <button onClick={() => { 
-  try { navigator.share({ title: product.title || '', url: window.location.href }); } catch(e) {} 
-}}>📤</button>
-                <button onClick={addToCart}>🛒</button>
+                <button onClick={() => { try { navigator.share({ title: product.title || '', url: window.location.href }); } catch(e) {} }}>📤</button>
+                <button onClick={addToCart} disabled={cartLoading}>{cartLoading ? '⏳' : '🛒'}</button>
                 <button onClick={toggleWishlist} style={{ color: isWishlisted ? '#e62e04' : '#333' }}>{isWishlisted ? '❤️' : '🤍'}</button>
               </div>
-
-              {/* PC অ্যাকশন */}
               <div className="pc-actions">
-                <button onClick={() => navigator.share?.({ title: product.title, url: window.location.href })}>📤 Share</button>
+                <button onClick={() => { try { navigator.share({ title: product.title || '', url: window.location.href }); } catch(e) {} }}>📤 Share</button>
                 <button onClick={toggleWishlist} style={{ background: isWishlisted ? '#ffe0e0' : '#f5f5f5' }}>{isWishlisted ? '❤️ Saved' : '🤍 Wishlist'}</button>
               </div>
 
-              <InfoContent />
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={addToCart} className="btn-outline">ADD TO CART</button>
+              <h1 className="product-title">{product.title}</h1>
+              <div className="rating-row">
+                <span className="rating-badge">{rating > 0 ? `⭐ ${rating}` : '⭐ New'}</span>
+                <span style={{ fontSize: '13px', color: '#666' }}>{rating > 0 ? `${rating} | 3 Ratings` : ''}</span>
+                {product.sold && product.sold > 0 && <span style={{ fontSize: '12px', color: '#999' }}>| 🔥 {product.sold} Sold</span>}
+                {product.stock && product.stock > 0 && <span style={{ fontSize: '12px', color: '#00a651' }}>| ✅ In Stock</span>}
+              </div>
+              <div className="price-row">
+                <span className="current-price">৳{product.price?.toLocaleString()}</span>
+                {oldPrice > 0 && <span className="old-price">৳{oldPrice.toLocaleString()}</span>}
+                {discount > 0 && <span className="discount-badge">-{discount}% OFF</span>}
+                <p style={{ fontSize: '11px', color: '#00a651', margin: '4px 0 0', width: '100%' }}>(Inclusive of all taxes)</p>
+              </div>
+              <div className="social-proof"><span>👥</span><strong>{displayCount}+</strong> people have added this to cart</div>
+              {product.description && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 8px 0' }}>📋 Product Highlights</h3>
+                  <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.8' }}>
+                    {product.description.split('. ').filter(Boolean).map((line, i) => <div key={i}>• {line}</div>)}
+                  </div>
+                </div>
+              )}
+              <div style={{ marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 8px 0' }}>📄 Product Details</h3>
+                <div style={{ display: 'grid', gap: '6px' }}>
+                  {product.category && <div className="detail-row"><span>Category</span><span>{product.category}</span></div>}
+                  <div className="detail-row"><span>Stock</span><span style={{ color: (product.stock && product.stock > 0) ? '#00a651' : '#e62e04' }}>{(product.stock && product.stock > 0) ? `✅ In Stock (${product.stock})` : '❌ Out of Stock'}</span></div>
+                  <div className="detail-row"><span>Sold</span><span>🔥 {product.sold || 0}</span></div>
+                </div>
+              </div>
+              {/* PC বাটন */}
+              <div className="pc-btns">
+                <button onClick={addToCart} className="btn-outline" disabled={cartLoading}>{cartLoading ? '⏳' : 'ADD TO CART'}</button>
                 <button onClick={() => router.push('/checkout')} className="btn-solid">BUY NOW</button>
               </div>
             </div>
@@ -240,10 +240,7 @@ export default function ProductDetailPage() {
               {related.slice(0, 8).map((r, i) => (
                 <div key={i} onClick={() => router.push(`/product/${r.id}`)} className="related-card">
                   <img src={r.webp_url || r.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300'} alt="" />
-                  <div style={{ padding: '10px' }}>
-                    <p>{r.title}</p>
-                    <span>৳{(r.price ?? 0).toLocaleString()}</span>
-                  </div>
+                  <div style={{ padding: '10px' }}><p>{r.title}</p><span>৳{(r.price ?? 0).toLocaleString()}</span></div>
                 </div>
               ))}
             </div>
@@ -251,11 +248,17 @@ export default function ProductDetailPage() {
         )}
       </div>
 
+      {/* 🔥 মোবাইল ফিক্সড বটম বাটন */}
+      <div className="mobile-fixed-btns">
+        <button onClick={addToCart} className="btn-outline" disabled={cartLoading}>{cartLoading ? '⏳ ADDING...' : 'ADD TO CART'}</button>
+        <button onClick={() => router.push('/checkout')} className="btn-solid">BUY NOW</button>
+      </div>
+
       {/* জুম মোডাল */}
       {zoomImage && (
         <div className="zoom-modal" onClick={() => setZoomImage(null)}>
           <span onClick={() => setZoomImage(null)}>✕</span>
-          <img src={zoomImage} alt="" />
+          <img src={zoomImage || ''} alt="" />
         </div>
       )}
 
@@ -275,11 +278,13 @@ export default function ProductDetailPage() {
         .zoom-lens { display: none; position: absolute; width: 100px; height: 100px; border: 2px solid rgba(230,46,4,0.8); border-radius: 4px; transform: translate(-50%, -50%); pointer-events: none; background: rgba(255,255,255,0.2); box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); }
         .zoom-result { display: none; position: absolute; top: 0; right: -340px; width: 320px; height: 320px; border: 2px solid #e0e0e0; border-radius: 8px; z-index: 50; box-shadow: 0 8px 30px rgba(0,0,0,0.2); background-repeat: no-repeat; }
         .discount-tag { position: absolute; top: 12px; left: 12px; background: #e62e04; color: white; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 700; }
+        .thumb-row { display: flex; gap: 8px; padding: 10px; justify-content: center; }
         .thumb { width: 52px; height: 52px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid #e0e0e0; }
         .thumb.active { border-color: #e62e04; }
-        .thumb img { width: 100%; height: 100%; objectFit: cover; }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; }
         .product-title { font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0 0 12px 0; line-height: 1.4; }
         .rating-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .rating-badge { background: #00a651; color: white; padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: 700; }
         .current-price { font-size: 26px; font-weight: 800; color: #1a1a2e; }
         .old-price { font-size: 15px; color: #999; text-decoration: line-through; margin-left: 10px; }
         .discount-badge { font-size: 13px; color: #e62e04; font-weight: 700; margin-left: 8px; }
@@ -289,15 +294,20 @@ export default function ProductDetailPage() {
         .detail-row span:first-child { color: #888; }
         .detail-row span:last-child { font-weight: 600; }
         .btn-outline { flex: 1; padding: 14px; background: white; color: #e62e04; border: 2px solid #e62e04; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
-        .btn-solid { flex: 1; padding: 14px; background: #e62e04; color: white; border: none; borderRadius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-solid { flex: 1; padding: 14px; background: #e62e04; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .pc-btns { display: none; gap: 10px; margin-top: 20px; }
         .related-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .related-card { background: white; border-radius: 8px; overflow: hidden; cursor: pointer; border: 1px solid #eee; }
         .related-card img { width: 100%; height: 140px; object-fit: cover; }
         .related-card p { font-size: 12px; font-weight: 600; margin: 0 0 4px 0; }
         .related-card span { font-size: 14px; font-weight: 700; color: #e62e04; }
         .zoom-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justifyContent: center; cursor: zoom-out; padding: 20px; }
-        .zoom-modal span { position: absolute; top: 20px; right: 30px; color: white; font-size: 36px; }
+        .zoom-modal span { position: absolute; top: 20px; right: 30px; color: white; fontSize: 36px; }
         .zoom-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+
+        /* 🔥 মোবাইল ফিক্সড বটম */
+        .mobile-fixed-btns { display: flex; gap: 10px; padding: 12px 16px; background: white; border-top: 1px solid #eee; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; }
+        .mobile-fixed-btns button:disabled { opacity: 0.5; }
 
         @media (min-width: 1024px) {
           .pc-hdr { display: block !important; }
@@ -309,8 +319,12 @@ export default function ProductDetailPage() {
           .info-col { width: 50% !important; padding: 30px !important; }
           .image-col img { height: 450px !important; }
           .related-grid { grid-template-columns: repeat(4, 1fr) !important; }
-          .zoom-box:hover .zoom-lens { display: block !important; }
-          .zoom-box:hover .zoom-result { display: block !important; }
+          .pc-btns { display: flex !important; }
+          .mobile-fixed-btns { display: none !important; }
+          /* ✅ আমাজন স্টাইল জুম: PC-তে হোভার করলে */
+          .zoom-box { overflow: visible !important; }
+          .zoom-box:hover .zoom-lens { display: block !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100px !important; height: 100px !important; border: 2px solid rgba(230,46,4,0.8) !important; border-radius: 4px !important; transform: translate(-50%, -50%) !important; pointer-events: none !important; background: rgba(255,255,255,0.2) !important; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4) !important; }
+          .zoom-box:hover .zoom-result { display: block !important; position: absolute !important; top: 0 !important; right: -340px !important; width: 320px !important; height: 320px !important; border: 2px solid #e0e0e0 !important; border-radius: 8px !important; z-index: 50 !important; box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important; background-repeat: no-repeat !important; }
           .product-title { font-size: 22px !important; }
         }
       `}</style>
@@ -357,7 +371,7 @@ function ReviewSection({ productId }: { productId: number }) {
           {r.image_url && <img src={r.webp_url || r.image_url} onClick={() => setZoomImage(r.webp_url || r.image_url)} style={{ maxWidth: '50px', maxHeight: '50px', borderRadius: '4px', cursor: 'zoom-in' }} />}
         </div>
       ))}
-      {zoomImage && <div onClick={() => setZoomImage(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '20px' }}><span onClick={() => setZoomImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '36px' }}>✕</span><img src={zoomImage} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '8px' }} /></div>}
+      {zoomImage && <div onClick={() => setZoomImage(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '20px' }}><span onClick={() => setZoomImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '36px' }}>✕</span><img src={zoomImage || ''} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '8px' }} /></div>}
     </div>
   );
 }
