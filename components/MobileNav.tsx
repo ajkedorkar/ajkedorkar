@@ -1,29 +1,38 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function MobileNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
+    }
+    load();
+  }, []);
 
   const navItems = [
     { icon: '🏠', label: 'Home', href: '/' },
     { icon: '🗂️', label: 'Category', href: '/category/offer-zone' },
     { icon: '🛒', label: 'Cart', href: '/cart' },
-    { icon: '👤', label: 'Account', href: '/auth/login' },
+    { icon: '👤', label: user ? 'Account' : 'Login', href: user ? '/account' : '/auth/login' },
   ];
 
-  const handleClick = (href: string, index: number) => {
+  const handleClick = (href: string) => {
     router.push(href);
   };
 
-  // এক্টিভ ট্যাব বের করা
   const getActiveIndex = () => {
     if (pathname === '/') return 0;
     if (pathname.startsWith('/category')) return 1;
     if (pathname.startsWith('/cart')) return 2;
-    if (pathname.startsWith('/auth')) return 3;
+    if (pathname.startsWith('/account') || pathname.startsWith('/auth')) return 3;
     return 0;
   };
 
@@ -36,7 +45,7 @@ export default function MobileNav() {
           <div 
             key={i} 
             className={`nav-item ${activeTab === i ? 'active' : ''}`}
-            onClick={() => handleClick(item.href, i)}
+            onClick={() => handleClick(item.href)}
           >
             <div className="icon-wrapper">
               <span style={{ fontSize: '20px' }}>{item.icon}</span>
@@ -54,7 +63,6 @@ export default function MobileNav() {
           right: 0;
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
           border-top: 1px solid rgba(0, 0, 0, 0.06);
           padding: 6px 0 calc(env(safe-area-inset-bottom) + 6px) 0;
           z-index: 10000;
@@ -77,24 +85,18 @@ export default function MobileNav() {
           transition: all 0.2s ease;
           color: #999;
         }
-        .nav-item.active {
-          color: #e62e04;
-        }
+        .nav-item.active { color: #e62e04; }
         .icon-wrapper {
           margin-bottom: 1px;
           transition: transform 0.2s ease;
         }
-        .nav-item.active .icon-wrapper {
-          transform: scale(1.05);
-        }
+        .nav-item.active .icon-wrapper { transform: scale(1.05); }
         .nav-label {
           font-size: 9px;
           font-weight: 600;
           letter-spacing: 0.2px;
         }
-        .nav-item.active .nav-label {
-          font-weight: 700;
-        }
+        .nav-item.active .nav-label { font-weight: 700; }
         .nav-item:active {
           opacity: 0.6;
           transform: scale(0.96);
