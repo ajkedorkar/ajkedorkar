@@ -97,21 +97,7 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 }}>
                   {banner.subtitle}
                 </p>
-                {showBtn && (
-                  <button className="banner-btn" style={{ 
-                    background: 'white', 
-                    color: '#e62e04', 
-                    border: 'none', 
-                    padding: '8px 20px', 
-                    borderRadius: '20px', 
-                    fontWeight: '700', 
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
-                  }}>
-                    {btnText}
-                  </button>
-                )}
+                
               </div>
             </div>
           );
