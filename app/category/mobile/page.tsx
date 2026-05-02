@@ -5,24 +5,32 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 const categories = [
-  { label: 'অফার জোন', slug: 'offer-zone', icon: '🎯', color: '#FFF0F0' },
-  { label: 'মোবাইল', slug: 'mobile', icon: '📱', color: '#F0F5FF' },
-  { label: 'কম্পিউটার', slug: 'computer', icon: '💻', color: '#F0FFF0' },
-  { label: 'ইলেকট্রনিক্স', slug: 'electronics', icon: '⚡', color: '#FFF8F0' },
-  { label: 'ফ্যাশন', slug: 'fashion', icon: '👗', color: '#FFF0F8' },
-  { label: 'গাড়ি', slug: 'car', icon: '🚗', color: '#F0F8FF' },
-  { label: 'চাকরি', slug: 'job', icon: '💼', color: '#F8F0FF' },
-  { label: 'সার্ভিস', slug: 'service', icon: '🔧', color: '#FFFFF0' },
-  { label: 'জমি', slug: 'property', icon: '🏠', color: '#FFF5F0' },
-  { label: 'তথ্য', slug: 'info', icon: '📢', color: '#F0FFFF' },
-  { label: 'পাত্রপাত্রী', slug: 'matrimony', icon: '💑', color: '#FFF0FF' },
-  { label: 'ভাড়া', slug: 'rent', icon: '🔑', color: '#F5FFF0' },
-  { label: 'জরুরি', slug: 'emergency', icon: '🚑', color: '#FFF0F0' },
-  { label: 'পশু', slug: 'animal', icon: '🐄', color: '#F0FFF5' },
-  { label: 'খাদ্য', slug: 'food', icon: '🍪', color: '#FFF8F0' },
-  { label: 'নিত্যপণ্য', slug: 'daily-needs', icon: '🛒', color: '#F8FFF0' },
-  { label: 'উপহার', slug: 'gifts', icon: '🎁', color: '#FFF5FF' },
-  { label: 'হস্তশিল্প', slug: 'handicraft', icon: '🔪', color: '#FFF0E8' },
+  { label: 'অফার জোন', slug: 'offer-zone', icon: '🎯', color: '#FFF0F0', bgColor: '#FF416C' },
+  { label: 'মোবাইল', slug: 'mobile', icon: '📱', color: '#F0F5FF', bgColor: '#1a73e8' },
+  { label: 'কম্পিউটার', slug: 'computer', icon: '💻', color: '#F0FFF0', bgColor: '#00a651' },
+  { label: 'ইলেকট্রনিক্স', slug: 'electronics', icon: '⚡', color: '#FFF8F0', bgColor: '#f85606' },
+  { label: 'ফ্যাশন', slug: 'fashion', icon: '👗', color: '#FFF0F8', bgColor: '#e62e04' },
+  { label: 'গাড়ি', slug: 'car', icon: '🚗', color: '#F0F8FF', bgColor: '#FF6B35' },
+  { label: 'চাকরি', slug: 'job', icon: '💼', color: '#F8F0FF', bgColor: '#8B5CF6' },
+  { label: 'সার্ভিস', slug: 'service', icon: '🔧', color: '#FFFFF0', bgColor: '#4A90D9' },
+  { label: 'জমি', slug: 'property', icon: '🏠', color: '#FFF5F0', bgColor: '#00A651' },
+  { label: 'তথ্য', slug: 'info', icon: '📢', color: '#F0FFFF', bgColor: '#06B6D4' },
+  { label: 'পাত্রপাত্রী', slug: 'matrimony', icon: '💑', color: '#FFF0FF', bgColor: '#FF6B8A' },
+  { label: 'ভাড়া', slug: 'rent', icon: '🔑', color: '#F5FFF0', bgColor: '#F59E0B' },
+  { label: 'জরুরি', slug: 'emergency', icon: '🚑', color: '#FFF0F0', bgColor: '#FF0000' },
+  { label: 'পশু', slug: 'animal', icon: '🐄', color: '#F0FFF5', bgColor: '#10B981' },
+  { label: 'খাদ্য', slug: 'food', icon: '🍪', color: '#FFF8F0', bgColor: '#FFB347' },
+  { label: 'নিত্যপণ্য', slug: 'daily-needs', icon: '🛒', color: '#F8FFF0', bgColor: '#6366F1' },
+  { label: 'উপহার', slug: 'gifts', icon: '🎁', color: '#FFF5FF', bgColor: '#EC4899' },
+  { label: 'হস্তশিল্প', slug: 'handicraft', icon: '🔪', color: '#FFF0E8', bgColor: '#D44800' },
+];
+
+const announcementTexts = [
+  "🔥 Flash Sale চলছে! ৫০% পর্যন্ত ছাড়!",
+  "🚚 ফ্রি ডেলিভারি ৯৯৯৳+ অর্ডারে!",
+  "🎁 নতুন ইউজার? ১৫% ছাড় পান!",
+  "⭐ বেস্ট সেলার প্রোডাক্ট দেখুন!",
+  "💎 প্রিমিয়াম কোয়ালিটি প্রোডাক্ট!",
 ];
 
 export default function MobileCategoryPage() {
@@ -30,29 +38,47 @@ export default function MobileCategoryPage() {
   const [activeCategory, setActiveCategory] = useState('offer-zone');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({ total: 0, avgRating: 0, totalSold: 0 });
+  const [announceText, setAnnounceText] = useState(0);
+
+  const activeCat = categories.find(c => c.slug === activeCategory);
+  const currentColor = activeCat?.bgColor || '#e62e04';
+
+  // অ্যানাউন্সমেন্ট স্লাইডার
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnnounceText(prev => (prev + 1) % announcementTexts.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
 
   // ক্যাটাগরি ক্লিক করলে প্রোডাক্ট লোড
   useEffect(() => {
     async function loadProducts() {
       setLoading(true);
-      const { data } = await supabase
+      const { data, count } = await supabase
         .from('products')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('category', activeCategory)
         .order('created_at', { ascending: false })
         .limit(15);
       
       if (data && data.length > 0) {
         setProducts(data);
+        const avgRating = data.reduce((sum: number, p: any) => sum + (p.rating || 0), 0) / data.length;
+        const totalSold = data.reduce((sum: number, p: any) => sum + (p.sold || 0), 0);
+        setStats({ total: count || data.length, avgRating: Math.round(avgRating * 10) / 10, totalSold });
       } else {
-        // ডামি ডাটা
         const dummy = Array.from({ length: 9 }, (_, i) => ({
           id: i + 1,
-          title: `${categories.find(c => c.slug === activeCategory)?.label || ''} প্রোডাক্ট ${i + 1}`,
+          title: `${activeCat?.label || ''} প্রোডাক্ট ${i + 1}`,
           price: Math.floor(Math.random() * 5000) + 500,
           image_url: `https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&sig=${i}`,
+          rating: (Math.random() * 2 + 3).toFixed(1),
+          sold: Math.floor(Math.random() * 1000),
         }));
         setProducts(dummy);
+        setStats({ total: dummy.length, avgRating: 4.2, totalSold: 2345 });
       }
       setLoading(false);
     }
@@ -62,22 +88,52 @@ export default function MobileCategoryPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'system-ui, sans-serif', paddingBottom: '80px' }}>
       
-      {/* হেডার */}
-      <div style={{ padding: '16px', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
+      {/* ===== প্রিমিয়াম হেডার ===== */}
+      <div style={{
+        background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`,
+        padding: '16px',
+        color: 'white',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}>
+        {/* উপরের রো */}
         <button onClick={() => router.push('/')} style={{
-          background: 'none', border: 'none', fontSize: '14px', color: '#FA5A28',
-          cursor: 'pointer', fontWeight: '600', marginBottom: '8px',
+          background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white',
+          padding: '6px 14px', borderRadius: '20px', cursor: 'pointer',
+          fontSize: '12px', fontWeight: '600', marginBottom: '10px',
         }}>← Home</button>
-        <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#1A1A1A', margin: 0 }}>
-          {categories.find(c => c.slug === activeCategory)?.label || 'ক্যাটাগরি'}
-        </h1>
+
+        {/* ক্যাটাগরি নাম + আইকন */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+          <span style={{ fontSize: '32px' }}>{activeCat?.icon || '🛍️'}</span>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', margin: 0 }}>
+            {activeCat?.label || 'ক্যাটাগরি'}
+          </h1>
+        </div>
+
+        {/* স্ট্যাট বার */}
+        <div style={{ display: 'flex', gap: '16px', fontSize: '11px', opacity: 0.95, marginBottom: '8px', flexWrap: 'wrap' }}>
+          <span>📦 {stats.total}টি প্রোডাক্ট</span>
+          {stats.avgRating > 0 && <span>⭐ {stats.avgRating}</span>}
+          {stats.totalSold > 0 && <span>🔥 {stats.totalSold} বিক্রি</span>}
+        </div>
+
+        {/* অ্যানিমেটেড টেক্সট স্লাইডার */}
+        <div style={{
+          background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '6px 12px',
+          fontSize: '11px', fontWeight: '500', textAlign: 'center',
+          animation: 'fadeIn 0.5s ease',
+        }}>
+          {announcementTexts[announceText]}
+        </div>
       </div>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 145px)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 210px)', overflow: 'hidden' }}>
         
         {/* বাম পাশের ক্যাটাগরি লিস্ট */}
         <div style={{ 
-          width: '105px', 
+          width: '100px', 
           background: '#FFFFFF', 
           overflowY: 'auto', 
           borderRight: '1px solid #EBEBEB',
@@ -88,9 +144,7 @@ export default function MobileCategoryPage() {
             return (
               <div 
                 key={i}
-                onClick={() => {
-                  setActiveCategory(cat.slug);
-                }}
+                onClick={() => setActiveCategory(cat.slug)}
                 style={{
                   padding: '14px 8px',
                   textAlign: 'center',
@@ -110,12 +164,7 @@ export default function MobileCategoryPage() {
         </div>
 
         {/* ডান পাশের ৩-কলাম প্রোডাক্ট গ্রিড */}
-        <div style={{ 
-          flex: 1, 
-          padding: '12px 10px', 
-          overflowY: 'auto',
-          background: '#fff',
-        }}>
+        <div style={{ flex: 1, padding: '12px 10px', overflowY: 'auto', background: '#fff' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳</div>
           ) : products.length === 0 ? (
@@ -130,12 +179,8 @@ export default function MobileCategoryPage() {
                   key={idx}
                   onClick={() => product.id && router.push(`/product/${product.id}`)}
                   style={{
-                    background: '#FFFFFF',
-                    borderRadius: '10px',
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    border: '1px solid #f0f0f0',
-                    transition: 'all 0.2s',
+                    background: '#FFFFFF', borderRadius: '10px', overflow: 'hidden',
+                    cursor: 'pointer', border: '1px solid #f0f0f0', transition: 'all 0.2s',
                   }}
                 >
                   <img 
@@ -145,22 +190,29 @@ export default function MobileCategoryPage() {
                   />
                   <div style={{ padding: '8px' }}>
                     <p style={{
-                      fontSize: '10px', fontWeight: '600', color: '#333', margin: '0 0 4px 0',
+                      fontSize: '10px', fontWeight: '600', color: '#333', margin: '0 0 2px 0',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {product.title}
-                    </p>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#FA5A28' }}>
+                    }}>{product.title}</p>
+                    {product.rating > 0 && (
+                      <span style={{ fontSize: '9px', color: '#FFB347' }}>⭐ {product.rating}</span>
+                    )}
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#FA5A28', marginTop: '2px' }}>
                       ৳{product.price?.toLocaleString()}
-                    </span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
