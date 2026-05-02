@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import HeroBanner from './HeroBanner';
 
-// ক্যাটাগরি ম্যাপ (title → slug)
 const categorySlugMap: Record<string, string> = {
   'অফার জোন': 'offer-zone',
   'মোবাইল': 'mobile',
@@ -54,18 +53,11 @@ export default function BannerSection({ banners }: BannerSectionProps) {
     return () => clearInterval(slider);
   }, [banners]);
 
-  // ব্যানার বা টেক্সট বারে ক্লিক → ক্যাটাগরি পেজ
   const handleBannerClick = () => {
     const banner = banners[currentBanner];
     if (!banner) return;
     const slug = categorySlugMap[banner.title] || banner.title.toLowerCase().replace(/\s+/g, '-');
     router.push(`/category/${slug}`);
-  };
-
-  const handleSwipe = (dir: 'left' | 'right') => {
-    if (banners.length === 0) return;
-    if (dir === 'left') setCurrentBanner(prev => (prev + 1) % banners.length);
-    else setCurrentBanner(prev => (prev - 1 + banners.length) % banners.length);
   };
 
   const displayBanners = banners.length > 0 ? banners : [
@@ -74,21 +66,9 @@ export default function BannerSection({ banners }: BannerSectionProps) {
 
   return (
     <div style={{ flex: 1 }}>
-      {/* ব্যানার স্লাইডার */}
+      {/* ব্যানার স্লাইডার (অ্যারো বাটন বাদ) */}
       <div style={{ position: 'relative', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer' }} onClick={handleBannerClick}>
         <HeroBanner banners={displayBanners} currentBanner={currentBanner} />
-        
-        <button onClick={(e) => { e.stopPropagation(); handleSwipe('right'); }} style={{
-          position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)',
-          background: 'rgba(255,255,255,0.4)', border: 'none', color: 'white',
-          width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '18px', zIndex: 10,
-        }}>‹</button>
-        
-        <button onClick={(e) => { e.stopPropagation(); handleSwipe('left'); }} style={{
-          position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
-          background: 'rgba(255,255,255,0.4)', border: 'none', color: 'white',
-          width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '18px', zIndex: 10,
-        }}>›</button>
       </div>
 
       {/* ডট ইন্ডিকেটর */}
@@ -101,7 +81,7 @@ export default function BannerSection({ banners }: BannerSectionProps) {
         ))}
       </div>
 
-      {/* টেক্সট বার (ক্লিক → ক্যাটাগরি পেজ) */}
+      {/* টেক্সট বার */}
       {displayBanners.length > 0 && (
         <div onClick={handleBannerClick} style={{
           background: `linear-gradient(90deg, ${displayBanners[currentBanner]?.color || '#e62e04'}, ${displayBanners[currentBanner]?.color || '#e62e04'}dd)`,
