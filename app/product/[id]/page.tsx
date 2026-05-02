@@ -261,13 +261,34 @@ export default function ProductDetailPage() {
   );
 }
 
-// ===== রিভিউ কম্পোনেন্ট =====
+// ===== রিভিউ কম্পোনেন্ট (অটো নাম সহ) =====
 function ReviewSection({ productId }: { productId: number }) {
   const [reviews, setReviews] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ user_name: '', rating: 5, comment: '', image_url: '', webp_url: '' });
   const [uploading, setUploading] = useState(false);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [loggedInUser, setLoggedInUser] = useState<any>(null);
+
+  // লগইন ইউজার চেক + প্রোফাইল নাম অটো বসানো
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setLoggedInUser(data.user);
+        // প্রোফাইল থেকে নাম
+        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', data.user.id).single();
+        if (profile?.full_name) {
+          setReviewForm(prev => ({ ...prev, user_name: profile.full_name }));
+        } else if (data.user.user_metadata?.full_name) {
+          setReviewForm(prev => ({ ...prev, user_name: data.user.user_metadata.full_name }));
+        } else if (data.user.user_metadata?.name) {
+          setReviewForm(prev => ({ ...prev, user_name: data.user.user_metadata.name }));
+        }
+      }
+    }
+    loadUser();
+  }, []);
 
   useEffect(() => { loadReviews(); }, [productId]);
 
@@ -291,13 +312,24 @@ function ReviewSection({ productId }: { productId: number }) {
   async function submitReview() {
     if (!reviewForm.comment) return alert('কমেন্ট লিখুন!');
     const { error } = await supabase.from('reviews').insert({
-      product_id: productId, user_name: reviewForm.user_name || 'Anonymous',
-      rating: reviewForm.rating, comment: reviewForm.comment,
-      image_url: reviewForm.image_url, webp_url: reviewForm.webp_url,
+      product_id: productId,
+      user_name: reviewForm.user_name || loggedInUser?.user_metadata?.full_name || loggedInUser?.user_metadata?.name || 'Anonymous',
+      rating: reviewForm.rating,
+      comment: reviewForm.comment,
+      image_url: reviewForm.image_url,
+      webp_url: reviewForm.webp_url,
     });
     if (!error) {
-      setReviewForm({ user_name: '', rating: 5, comment: '', image_url: '', webp_url: '' });
-      setShowForm(false); loadReviews(); alert('✅ রিভিউ জমা হয়েছে!');
+      setReviewForm(prev => ({ 
+        ...prev, 
+        rating: 5, 
+        comment: '', 
+        image_url: '', 
+        webp_url: '' 
+      }));
+      setShowForm(false); 
+      loadReviews(); 
+      alert('✅ রিভিউ জমা হয়েছে!');
     }
   }
 
@@ -305,12 +337,26 @@ function ReviewSection({ productId }: { productId: number }) {
     <div style={{ background: 'white', borderRadius: '10px', padding: '14px 16px', marginBottom: '8px', margin: '0 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#222', margin: 0 }}>💬 রিভিউ ({reviews.length})</h3>
-        <button onClick={() => setShowForm(!showForm)} style={{ background: 'white', color: '#e62e04', border: '1px solid #e62e04', padding: '5px 12px', borderRadius: '3px', cursor: 'pointer', fontWeight: '500', fontSize: '11px' }}>✍️ লিখুন</button>
+        <button onClick={() => {
+          if (!loggedInUser) {
+            alert('রিভিউ দিতে আগে লগইন করুন!');
+            return;
+          }
+          setShowForm(!showForm);
+        }} style={{ background: 'white', color: '#e62e04', border: '1px solid #e62e04', padding: '5px 12px', borderRadius: '3px', cursor: 'pointer', fontWeight: '500', fontSize: '11px' }}>
+          ✍️ লিখুন
+        </button>
       </div>
 
       {showForm && (
         <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '6px', marginBottom: '10px' }}>
-          <input value={reviewForm.user_name} onChange={e => setReviewForm({...reviewForm, user_name: e.target.value})} placeholder="আপনার নাম" style={revInp} />
+          <input 
+            value={reviewForm.user_name} 
+            onChange={e => setReviewForm({...reviewForm, user_name: e.target.value})} 
+            placeholder={loggedInUser ? (reviewForm.user_name || 'আপনার নাম') : 'আপনার নাম'}
+            style={revInp}
+            readOnly={!!loggedInUser}
+          />
           <div style={{ display: 'flex', gap: '2px', margin: '6px 0' }}>
             {[1,2,3,4,5].map(s => (
               <span key={s} onClick={() => setReviewForm({...reviewForm, rating: s})} style={{ fontSize: '20px', cursor: 'pointer', opacity: s <= reviewForm.rating ? 1 : 0.3 }}>⭐</span>
