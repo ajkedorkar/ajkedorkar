@@ -88,48 +88,46 @@ export default function MobileCategoryPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'system-ui, sans-serif', paddingBottom: '80px' }}>
       
-      {/* ===== প্রিমিয়াম হেডার ===== */}
+      {/* ===== কমপ্যাক্ট হেডার ===== */}
       <div style={{
         background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`,
-        padding: '16px',
+        padding: '10px 14px',
         color: 'white',
         position: 'sticky',
         top: 0,
         zIndex: 100,
       }}>
-        {/* উপরের রো */}
-        <button onClick={() => router.push('/')} style={{
-          background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white',
-          padding: '6px 14px', borderRadius: '20px', cursor: 'pointer',
-          fontSize: '12px', fontWeight: '600', marginBottom: '10px',
-        }}>← Home</button>
-
-        {/* ক্যাটাগরি নাম + আইকন */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-          <span style={{ fontSize: '32px' }}>{activeCat?.icon || '🛍️'}</span>
-          <h1 style={{ fontSize: '22px', fontWeight: '800', margin: 0 }}>
+        {/* উপরের রো: ব্যাক + ক্যাটাগরি নাম */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <button onClick={() => router.push('/')} style={{
+            background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white',
+            padding: '4px 10px', borderRadius: '14px', cursor: 'pointer',
+            fontSize: '11px', fontWeight: '600',
+          }}>←</button>
+          <span style={{ fontSize: '22px' }}>{activeCat?.icon || '🛍️'}</span>
+          <h1 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>
             {activeCat?.label || 'ক্যাটাগরি'}
           </h1>
         </div>
 
-        {/* স্ট্যাট বার */}
-        <div style={{ display: 'flex', gap: '16px', fontSize: '11px', opacity: 0.95, marginBottom: '8px', flexWrap: 'wrap' }}>
-          <span>📦 {stats.total}টি প্রোডাক্ট</span>
-          {stats.avgRating > 0 && <span>⭐ {stats.avgRating}</span>}
-          {stats.totalSold > 0 && <span>🔥 {stats.totalSold} বিক্রি</span>}
-        </div>
-
-        {/* অ্যানিমেটেড টেক্সট স্লাইডার */}
-        <div style={{
-          background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '6px 12px',
-          fontSize: '11px', fontWeight: '500', textAlign: 'center',
-          animation: 'fadeIn 0.5s ease',
-        }}>
-          {announcementTexts[announceText]}
+        {/* স্ট্যাট + অ্যানিমেশন এক লাইনে */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: '10px', fontSize: '10px', opacity: 0.9 }}>
+            <span>📦 {stats.total}টি</span>
+            {stats.avgRating > 0 && <span>⭐ {stats.avgRating}</span>}
+            {stats.totalSold > 0 && <span>🔥 {stats.totalSold}</span>}
+          </div>
+          <div style={{
+            background: 'rgba(0,0,0,0.2)', borderRadius: '6px', padding: '3px 8px',
+            fontSize: '9px', fontWeight: '500', maxWidth: '180px',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {announcementTexts[announceText]}
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 210px)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 125px)', overflow: 'hidden' }}>
         
         {/* বাম পাশের ক্যাটাগরি লিস্ট */}
         <div style={{ 
