@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 
 interface MobileHeaderProps {
   typingText: string;
@@ -12,15 +10,6 @@ interface MobileHeaderProps {
 
 export default function MobileHeader({ typingText, searchQuery, onSearchChange }: MobileHeaderProps) {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user || null);
-    }
-    load();
-  }, []);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -46,10 +35,13 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
           AjkeDorkar
         </div>
         <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+          {/* ❤️ Wishlist */}
           <span 
             onClick={() => router.push('/account/wishlist')}
             style={{ fontSize: '20px', color: 'white', cursor: 'pointer' }}
           >❤️</span>
+          
+          {/* 🛒 Cart */}
           <span 
             onClick={() => router.push('/cart')}
             style={{ fontSize: '20px', color: 'white', cursor: 'pointer', position: 'relative' }}
@@ -62,10 +54,6 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>0</span>
           </span>
-          <span 
-            onClick={() => router.push(user ? '/account' : '/auth/login')}
-            style={{ fontSize: '20px', color: 'white', cursor: 'pointer' }}
-          >👤</span>
         </div>
       </div>
 
