@@ -37,10 +37,7 @@ export default function ProductDetailPage() {
   const [displayCount, setDisplayCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [typingText, setTypingText] = useState('');
-
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
-  const [isHovering, setIsHovering] = useState(false);
-  const imgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadProduct() {
@@ -87,9 +84,10 @@ export default function ProductDetailPage() {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
-    const y = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
-    setMousePos({ x, y });
+    setMousePos({
+      x: Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100)),
+      y: Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100)),
+    });
   };
 
   async function toggleWishlist() {
@@ -117,30 +115,34 @@ export default function ProductDetailPage() {
   const allImages = [product.webp_url || product.image_url].filter(Boolean);
   const mainImage = allImages[selectedImage] || allImages[0] || '';
 
-  const ProductInfo = () => (
+  // কমন ইনফো সেকশন
+  const InfoContent = () => (
     <>
-      <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a2e', margin: '0 0 12px 0', lineHeight: '1.4' }}>{product.title}</h1>
+      <h1 className="product-title">{product.title}</h1>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-        <span style={{ background: '#00a651', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: '700' }}>{rating > 0 ? `⭐ ${rating}` : '⭐ New'}</span>
-        <span style={{ fontSize: '12px', color: '#666' }}>{rating > 0 ? `${rating} | 3 Ratings` : ''}</span>
+      <div className="rating-row">
+        <span style={{ background: '#00a651', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '13px', fontWeight: '700' }}>
+          {rating > 0 ? `⭐ ${rating}` : '⭐ New'}
+        </span>
+        <span style={{ fontSize: '13px', color: '#666' }}>{rating > 0 ? `${rating} | 3 Ratings` : ''}</span>
         {product.sold && product.sold > 0 && <span style={{ fontSize: '12px', color: '#999' }}>| 🔥 {product.sold} Sold</span>}
         {product.stock && product.stock > 0 && <span style={{ fontSize: '12px', color: '#00a651' }}>| ✅ In Stock</span>}
       </div>
 
-      <div style={{ marginBottom: '14px' }}>
-        <span style={{ fontSize: '26px', fontWeight: '800', color: '#1a1a2e' }}>৳{product.price?.toLocaleString()}</span>
-        {oldPrice > 0 && <><span style={{ fontSize: '15px', color: '#999', textDecoration: 'line-through', marginLeft: '10px' }}>৳{oldPrice.toLocaleString()}</span><span style={{ fontSize: '13px', color: '#e62e04', fontWeight: '700', marginLeft: '8px' }}>-{discount}% OFF</span></>}
-        <p style={{ fontSize: '11px', color: '#00a651', margin: '4px 0 0' }}>(Inclusive of all taxes)</p>
+      <div className="price-row">
+        <span className="current-price">৳{product.price?.toLocaleString()}</span>
+        {oldPrice > 0 && <span className="old-price">৳{oldPrice.toLocaleString()}</span>}
+        {discount > 0 && <span className="discount-badge">-{discount}% OFF</span>}
+        <p style={{ fontSize: '11px', color: '#00a651', margin: '4px 0 0', width: '100%' }}>(Inclusive of all taxes)</p>
       </div>
 
-      <div style={{ background: '#FFF8E1', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '13px', color: '#E65100' }}>
-        <span>👥</span><span style={{ fontWeight: '700', fontSize: '16px', color: '#e62e04' }}>{displayCount}+</span> people added to cart
+      <div className="social-proof">
+        <span>👥</span><strong>{displayCount}+</strong> people have added this to cart
       </div>
 
       {product.description && (
         <div style={{ marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 6px 0' }}>📋 Product Highlights</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 8px 0' }}>📋 Product Highlights</h3>
           <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.8' }}>
             {product.description.split('. ').filter(Boolean).map((line, i) => <div key={i}>• {line}</div>)}
           </div>
@@ -148,100 +150,100 @@ export default function ProductDetailPage() {
       )}
 
       <div style={{ marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 6px 0' }}>📄 Product Details</h3>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 8px 0' }}>📄 Product Details</h3>
         <div style={{ display: 'grid', gap: '6px' }}>
-          {product.category && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}><span style={{ color: '#888' }}>Category</span><span style={{ fontWeight: '600' }}>{product.category}</span></div>}
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}><span style={{ color: '#888' }}>Stock</span><span style={{ fontWeight: '600', color: (product.stock && product.stock > 0) ? '#00a651' : '#e62e04' }}>{(product.stock && product.stock > 0) ? `✅ In Stock (${product.stock})` : '❌ Out of Stock'}</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}><span style={{ color: '#888' }}>Sold</span><span style={{ fontWeight: '600' }}>🔥 {product.sold || 0}</span></div>
+          {product.category && <div className="detail-row"><span>Category</span><span>{product.category}</span></div>}
+          <div className="detail-row"><span>Stock</span><span style={{ color: (product.stock && product.stock > 0) ? '#00a651' : '#e62e04' }}>{(product.stock && product.stock > 0) ? `✅ In Stock (${product.stock})` : '❌ Out of Stock'}</span></div>
+          <div className="detail-row"><span>Sold</span><span>🔥 {product.sold || 0}</span></div>
         </div>
       </div>
     </>
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f5f5', fontFamily: 'Arial, sans-serif', paddingBottom: '80px' }}>
+    <div style={{ minHeight: '100vh', background: '#f5f5f5', fontFamily: 'Arial, sans-serif', paddingBottom: '70px' }}>
       
-      {/* ===== PC HEADER ===== */}
-      <div className="pc-header-wrap"><PCHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} /></div>
+      {/* PC HEADER */}
+      <div className="pc-hdr"><PCHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} /></div>
 
-      {/* ===== মোবাইল ব্যাক বাটন ===== */}
-      <button className="mobile-back-btn" onClick={() => router.back()} style={{
-        position: 'fixed', top: '12px', left: '12px', zIndex: 100,
-        background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%',
-        width: '32px', height: '32px', cursor: 'pointer', fontSize: '18px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-      }}>←</button>
+      {/* মোবাইল ব্যাক */}
+      <button className="mob-back" onClick={() => router.back()}>←</button>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        <div className="product-flex" style={{ background: 'white' }}>
+        <div className="main-card">
           
-          {/* ===== ইমেজ সেকশন ===== */}
-          <div className="product-image-col" style={{ position: 'relative' }}>
-            <div className="zoom-wrapper" ref={imgRef}
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
-              onMouseMove={handleMouseMove}
-              onClick={() => setZoomImage(mainImage)}
-              style={{ position: 'relative', overflow: 'hidden', cursor: 'crosshair', background: '#fafafa' }}>
-              
-              <img src={mainImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'} alt={product.title}
-                style={{ width: '100%', height: '380px', objectFit: 'contain', display: 'block' }} />
+          <div className="flex-container">
+            
+            {/* ===== ইমেজ (বামে) ===== */}
+            <div className="image-col">
+              <div className="zoom-box" onMouseMove={handleMouseMove} onClick={() => setZoomImage(mainImage)}>
+                <img src={mainImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'} alt={product.title} />
 
-              {/* Zoom Lens + Result (PC) */}
-              <div className="zoom-lens" style={{ display: 'none', position: 'absolute', top: `${mousePos.y}%`, left: `${mousePos.x}%`, width: '100px', height: '100px', border: '2px solid rgba(230,46,4,0.8)', borderRadius: '4px', transform: 'translate(-50%, -50%)', pointerEvents: 'none', background: 'rgba(255,255,255,0.2)', boxShadow: '0 0 0 9999px rgba(0,0,0,0.4)' }} />
-              <div className="zoom-result" style={{ display: 'none', position: 'absolute', top: 0, right: '-340px', width: '320px', height: '320px', border: '2px solid #e0e0e0', borderRadius: '8px', backgroundImage: `url(${mainImage})`, backgroundSize: '250%', backgroundPosition: `${mousePos.x}% ${mousePos.y}%`, backgroundRepeat: 'no-repeat', zIndex: 50, boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }} />
+                {/* PC Zoom Lens */}
+                <div className="zoom-lens" style={{ top: `${mousePos.y}%`, left: `${mousePos.x}%` }} />
+                {/* PC Zoom Result */}
+                <div className="zoom-result" style={{
+                  backgroundImage: `url(${mainImage})`,
+                  backgroundSize: '250%',
+                  backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
+                }} />
 
-              {discount > 0 && <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#e62e04', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: '700' }}>-{discount}%</span>}
-            </div>
-
-            {/* থাম্বনেইল */}
-            {allImages.length > 1 && (
-              <div style={{ display: 'flex', gap: '8px', padding: '10px', justifyContent: 'center' }}>
-                {allImages.map((img, i) => (
-                  <div key={i} onClick={() => setSelectedImage(i)} style={{ width: '52px', height: '52px', borderRadius: '6px', overflow: 'hidden', cursor: 'pointer', border: selectedImage === i ? '2px solid #e62e04' : '2px solid #e0e0e0' }}>
-                    <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                  </div>
-                ))}
+                {discount > 0 && <span className="discount-tag">-{discount}%</span>}
               </div>
-            )}
-          </div>
 
-          {/* ===== ইনফো সেকশন ===== */}
-          <div className="product-info-col" style={{ padding: '20px' }}>
-            {/* PC অ্যাকশন */}
-            <div className="pc-actions" style={{ display: 'none', justifyContent: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-              <button onClick={() => navigator.share?.({ title: product.title, url: window.location.href })} style={actBtn}>📤 Share</button>
-              <button onClick={toggleWishlist} style={{...actBtn, background: isWishlisted ? '#ffe0e0' : '#f5f5f5'}}>{isWishlisted ? '❤️ Saved' : '🤍 Wishlist'}</button>
+              {allImages.length > 1 && (
+                <div style={{ display: 'flex', gap: '8px', padding: '10px', justifyContent: 'center' }}>
+                  {allImages.map((img, i) => (
+                    <div key={i} onClick={() => setSelectedImage(i)} className={`thumb ${selectedImage === i ? 'active' : ''}`}>
+                      <img src={zoomImage || ''} alt="" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* মোবাইল অ্যাকশন */}
-            <div className="mobile-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-              <button onClick={() => navigator.share?.({ title: product.title, url: window.location.href })} style={iconBtn}>📤</button>
-              <button onClick={addToCart} style={iconBtn}>🛒</button>
-              <button onClick={toggleWishlist} style={{...iconBtn, color: isWishlisted ? '#e62e04' : '#333'}}>{isWishlisted ? '❤️' : '🤍'}</button>
-            </div>
+            {/* ===== ইনফো (ডানে) ===== */}
+            <div className="info-col">
+              
+              {/* মোবাইল অ্যাকশন আইকন */}
+              <div className="mob-actions">
+                <button onClick={() => { 
+  try { navigator.share({ title: product.title || '', url: window.location.href }); } catch(e) {} 
+}}>📤</button>
+                <button onClick={addToCart}>🛒</button>
+                <button onClick={toggleWishlist} style={{ color: isWishlisted ? '#e62e04' : '#333' }}>{isWishlisted ? '❤️' : '🤍'}</button>
+              </div>
 
-            <ProductInfo />
+              {/* PC অ্যাকশন */}
+              <div className="pc-actions">
+                <button onClick={() => navigator.share?.({ title: product.title, url: window.location.href })}>📤 Share</button>
+                <button onClick={toggleWishlist} style={{ background: isWishlisted ? '#ffe0e0' : '#f5f5f5' }}>{isWishlisted ? '❤️ Saved' : '🤍 Wishlist'}</button>
+              </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={addToCart} style={{ flex: 1, padding: '14px', background: 'white', color: '#e62e04', border: '2px solid #e62e04', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>ADD TO CART</button>
-              <button onClick={() => router.push('/checkout')} style={{ flex: 1, padding: '14px', background: '#e62e04', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>BUY NOW</button>
+              <InfoContent />
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button onClick={addToCart} className="btn-outline">ADD TO CART</button>
+                <button onClick={() => router.push('/checkout')} className="btn-solid">BUY NOW</button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* রিভিউ + রিলেটেড */}
         <ReviewSection productId={product.id} />
 
         {related.length > 0 && (
           <div style={{ marginTop: '20px', padding: '0 15px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px' }}>🔗 Related</h3>
-            <div className="related-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px' }}>🔗 Related Products</h3>
+            <div className="related-grid">
               {related.slice(0, 8).map((r, i) => (
-                <div key={i} onClick={() => router.push(`/product/${r.id}`)} style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #eee' }}>
-                  <img src={r.webp_url || r.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300'} style={{ width: '100%', height: '140px', objectFit: 'cover' }} alt="" />
-                  <div style={{ padding: '10px' }}><p style={{ fontSize: '12px', fontWeight: '600', margin: '0 0 4px 0' }}>{r.title}</p><span style={{ fontSize: '14px', fontWeight: '700', color: '#e62e04' }}>৳{(r.price ?? 0).toLocaleString()}</span></div>
+                <div key={i} onClick={() => router.push(`/product/${r.id}`)} className="related-card">
+                  <img src={r.webp_url || r.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300'} alt="" />
+                  <div style={{ padding: '10px' }}>
+                    <p>{r.title}</p>
+                    <span>৳{(r.price ?? 0).toLocaleString()}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -251,35 +253,65 @@ export default function ProductDetailPage() {
 
       {/* জুম মোডাল */}
       {zoomImage && (
-        <div onClick={() => setZoomImage(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '20px' }}>
-          <span onClick={() => setZoomImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '36px' }}>✕</span>
-          <img src={zoomImage} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '8px' }} />
+        <div className="zoom-modal" onClick={() => setZoomImage(null)}>
+          <span onClick={() => setZoomImage(null)}>✕</span>
+          <img src={zoomImage} alt="" />
         </div>
       )}
 
       <style jsx global>{`
-        .pc-header-wrap { display: none; }
-        .mobile-back-btn { display: flex; }
-        .pc-actions { display: none !important; }
-        .mobile-actions { display: flex !important; }
-        .zoom-lens, .zoom-result { display: none !important; }
-        .product-flex { flex-direction: column; }
-        .product-image-col { width: 100%; }
-        .product-info-col { width: 100%; }
-        .related-grid { grid-template-columns: repeat(2, 1fr); }
+        .pc-hdr { display: none; }
+        .mob-back { display: flex; position: fixed; top: 12px; left: 12px; z-index: 100; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 18px; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        .mob-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
+        .mob-actions button { background: #f5f5f5; border: 1px solid #ddd; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .pc-actions { display: none; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
+        .pc-actions button { background: #f5f5f5; border: 1px solid #ddd; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .main-card { background: white; border-radius: 2px; overflow: hidden; }
+        .flex-container { display: flex; flex-direction: column; }
+        .image-col { width: 100%; position: relative; }
+        .image-col img { width: 100%; height: 380px; object-fit: contain; display: block; background: #fafafa; }
+        .info-col { width: 100%; padding: 16px; }
+        .zoom-box { position: relative; overflow: hidden; cursor: crosshair; background: #fafafa; }
+        .zoom-lens { display: none; position: absolute; width: 100px; height: 100px; border: 2px solid rgba(230,46,4,0.8); border-radius: 4px; transform: translate(-50%, -50%); pointer-events: none; background: rgba(255,255,255,0.2); box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); }
+        .zoom-result { display: none; position: absolute; top: 0; right: -340px; width: 320px; height: 320px; border: 2px solid #e0e0e0; border-radius: 8px; z-index: 50; box-shadow: 0 8px 30px rgba(0,0,0,0.2); background-repeat: no-repeat; }
+        .discount-tag { position: absolute; top: 12px; left: 12px; background: #e62e04; color: white; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 700; }
+        .thumb { width: 52px; height: 52px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid #e0e0e0; }
+        .thumb.active { border-color: #e62e04; }
+        .thumb img { width: 100%; height: 100%; objectFit: cover; }
+        .product-title { font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0 0 12px 0; line-height: 1.4; }
+        .rating-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .current-price { font-size: 26px; font-weight: 800; color: #1a1a2e; }
+        .old-price { font-size: 15px; color: #999; text-decoration: line-through; margin-left: 10px; }
+        .discount-badge { font-size: 13px; color: #e62e04; font-weight: 700; margin-left: 8px; }
+        .social-proof { background: #FFF8E1; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 13px; color: #E65100; }
+        .social-proof strong { font-size: 16px; color: #e62e04; }
+        .detail-row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+        .detail-row span:first-child { color: #888; }
+        .detail-row span:last-child { font-weight: 600; }
+        .btn-outline { flex: 1; padding: 14px; background: white; color: #e62e04; border: 2px solid #e62e04; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-solid { flex: 1; padding: 14px; background: #e62e04; color: white; border: none; borderRadius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .related-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .related-card { background: white; border-radius: 8px; overflow: hidden; cursor: pointer; border: 1px solid #eee; }
+        .related-card img { width: 100%; height: 140px; object-fit: cover; }
+        .related-card p { font-size: 12px; font-weight: 600; margin: 0 0 4px 0; }
+        .related-card span { font-size: 14px; font-weight: 700; color: #e62e04; }
+        .zoom-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justifyContent: center; cursor: zoom-out; padding: 20px; }
+        .zoom-modal span { position: absolute; top: 20px; right: 30px; color: white; font-size: 36px; }
+        .zoom-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; }
 
         @media (min-width: 1024px) {
-          .pc-header-wrap { display: block !important; }
-          .mobile-back-btn { display: none !important; }
+          .pc-hdr { display: block !important; }
+          .mob-back { display: none !important; }
+          .mob-actions { display: none !important; }
           .pc-actions { display: flex !important; }
-          .mobile-actions { display: none !important; }
-          .product-flex { flex-direction: row !important; gap: 0 !important; }
-          .product-image-col { width: 50% !important; }
-          .product-info-col { width: 50% !important; padding: 30px !important; }
+          .flex-container { flex-direction: row !important; gap: 0 !important; }
+          .image-col { width: 50% !important; }
+          .info-col { width: 50% !important; padding: 30px !important; }
+          .image-col img { height: 450px !important; }
           .related-grid { grid-template-columns: repeat(4, 1fr) !important; }
-          .zoom-wrapper:hover .zoom-lens { display: block !important; }
-          .zoom-wrapper:hover .zoom-result { display: block !important; }
-          .product-image-col img { height: 450px !important; }
+          .zoom-box:hover .zoom-lens { display: block !important; }
+          .zoom-box:hover .zoom-result { display: block !important; }
+          .product-title { font-size: 22px !important; }
         }
       `}</style>
     </div>
@@ -310,9 +342,9 @@ function ReviewSection({ productId }: { productId: number }) {
       </div>
       {showForm && (
         <div style={{ background: '#f8f9fa', padding: '14px', borderRadius: '8px', marginBottom: '12px' }}>
-          <input value={reviewForm.user_name} onChange={e => setReviewForm({...reviewForm, user_name: e.target.value})} placeholder="আপনার নাম" style={revInp} readOnly={!!loggedInUser} />
+          <input value={reviewForm.user_name} onChange={e => setReviewForm({...reviewForm, user_name: e.target.value})} placeholder="আপনার নাম" style={rInp} readOnly={!!loggedInUser} />
           <div style={{ display: 'flex', gap: '4px', margin: '8px 0' }}>{[1,2,3,4,5].map(s => <span key={s} onClick={() => setReviewForm({...reviewForm, rating: s})} style={{ fontSize: '22px', cursor: 'pointer', opacity: s <= reviewForm.rating ? 1 : 0.3 }}>⭐</span>)}</div>
-          <textarea value={reviewForm.comment} onChange={e => setReviewForm({...reviewForm, comment: e.target.value})} placeholder="মন্তব্য..." style={{...revInp, height: '60px'}} />
+          <textarea value={reviewForm.comment} onChange={e => setReviewForm({...reviewForm, comment: e.target.value})} placeholder="মন্তব্য..." style={{...rInp, height: '60px'}} />
           <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleReviewImage(f); }} style={{ marginTop: '6px', fontSize: '11px' }} />
           {reviewForm.image_url && <img src={reviewForm.webp_url || reviewForm.image_url} onClick={() => setZoomImage(reviewForm.webp_url || reviewForm.image_url)} style={{ maxWidth: '60px', maxHeight: '60px', borderRadius: '4px', marginTop: '6px', cursor: 'zoom-in' }} />}
           <button onClick={submitReview} style={{ marginTop: '8px', background: '#e62e04', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>💾 জমা</button>
@@ -330,6 +362,4 @@ function ReviewSection({ productId }: { productId: number }) {
   );
 }
 
-const revInp: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '12px', marginBottom: '4px', boxSizing: 'border-box' };
-const iconBtn: React.CSSProperties = { background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const actBtn: React.CSSProperties = { background: '#f5f5f5', border: '1px solid #ddd', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' };
+const rInp: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '12px', marginBottom: '4px', boxSizing: 'border-box' };
