@@ -40,14 +40,19 @@ export default function MobileCategoryPage() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, avgRating: 0, totalSold: 0 });
   const [announceText, setAnnounceText] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const activeCat = categories.find(c => c.slug === activeCategory);
   const currentColor = activeCat?.bgColor || '#e62e04';
 
-  // অ্যানাউন্সমেন্ট স্লাইডার
+  // অ্যানাউন্সমেন্ট স্লাইডার (ফুল ফিচার)
   useEffect(() => {
     const timer = setInterval(() => {
-      setAnnounceText(prev => (prev + 1) % announcementTexts.length);
+      setIsAnimating(true);
+      setTimeout(() => {
+        setAnnounceText(prev => (prev + 1) % announcementTexts.length);
+        setIsAnimating(false);
+      }, 300);
     }, 3000);
     return () => clearInterval(timer);
   }, []);
@@ -88,7 +93,7 @@ export default function MobileCategoryPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'system-ui, sans-serif', paddingBottom: '80px' }}>
       
-      {/* ===== কমপ্যাক্ট হেডার ===== */}
+      {/* ===== প্রিমিয়াম হেডার ===== */}
       <div style={{
         background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`,
         padding: '10px 14px',
@@ -97,37 +102,66 @@ export default function MobileCategoryPage() {
         top: 0,
         zIndex: 100,
       }}>
-        {/* উপরের রো: ব্যাক + ক্যাটাগরি নাম */}
+        {/* উপরের রো */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
           <button onClick={() => router.push('/')} style={{
-            background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white',
-            padding: '4px 10px', borderRadius: '14px', cursor: 'pointer',
-            fontSize: '11px', fontWeight: '600',
-          }}>←</button>
-          <span style={{ fontSize: '22px' }}>{activeCat?.icon || '🛍️'}</span>
-          <h1 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>
+            background: 'rgba(255,255,255,0.25)', border: 'none', color: 'white',
+            padding: '5px 12px', borderRadius: '16px', cursor: 'pointer',
+            fontSize: '12px', fontWeight: '600',
+          }}>← Home</button>
+          <span style={{ fontSize: '24px' }}>{activeCat?.icon || '🛍️'}</span>
+          <h1 style={{ fontSize: '17px', fontWeight: '800', margin: 0 }}>
             {activeCat?.label || 'ক্যাটাগরি'}
           </h1>
         </div>
 
-        {/* স্ট্যাট + অ্যানিমেশন এক লাইনে */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
-          <div style={{ display: 'flex', gap: '10px', fontSize: '10px', opacity: 0.9 }}>
-            <span>📦 {stats.total}টি</span>
-            {stats.avgRating > 0 && <span>⭐ {stats.avgRating}</span>}
-            {stats.totalSold > 0 && <span>🔥 {stats.totalSold}</span>}
-          </div>
-          <div style={{
-            background: 'rgba(0,0,0,0.2)', borderRadius: '6px', padding: '3px 8px',
-            fontSize: '9px', fontWeight: '500', maxWidth: '180px',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        {/* স্ট্যাট বার */}
+        <div style={{ display: 'flex', gap: '14px', fontSize: '12px', opacity: 0.95, marginBottom: '8px', flexWrap: 'wrap' }}>
+          <span>📦 {stats.total}টি প্রোডাক্ট</span>
+          {stats.avgRating > 0 && <span>⭐ {stats.avgRating}</span>}
+          {stats.totalSold > 0 && <span>🔥 {stats.totalSold} বিক্রি</span>}
+        </div>
+
+        {/* অ্যানিমেটেড টেক্সট স্লাইডার (ফুল ফিচার) */}
+        <div style={{
+          background: 'rgba(0,0,0,0.25)',
+          borderRadius: '8px',
+          padding: '8px 12px',
+          fontSize: '12px',
+          fontWeight: '600',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+          minHeight: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
+        }}>
+          <span style={{
+            transition: 'all 0.3s ease',
+            opacity: isAnimating ? 0 : 1,
+            transform: isAnimating ? 'translateY(-10px)' : 'translateY(0)',
           }}>
             {announcementTexts[announceText]}
+          </span>
+          
+          {/* ডট ইন্ডিকেটর */}
+          <div style={{ display: 'flex', gap: '3px', position: 'absolute', right: '10px' }}>
+            {announcementTexts.map((_, i) => (
+              <div key={i} style={{
+                width: i === announceText ? '14px' : '4px',
+                height: '4px',
+                borderRadius: '2px',
+                background: i === announceText ? 'white' : 'rgba(255,255,255,0.4)',
+                transition: 'all 0.3s ease',
+              }} />
+            ))}
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 125px)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 145px)', overflow: 'hidden' }}>
         
         {/* বাম পাশের ক্যাটাগরি লিস্ট */}
         <div style={{ 
@@ -164,11 +198,11 @@ export default function MobileCategoryPage() {
         {/* ডান পাশের ৩-কলাম প্রোডাক্ট গ্রিড */}
         <div style={{ flex: 1, padding: '12px 10px', overflowY: 'auto', background: '#fff' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳</div>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳ লোড হচ্ছে...</div>
           ) : products.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
               <span style={{ fontSize: '40px', display: 'block', marginBottom: '8px' }}>📭</span>
-              প্রোডাক্ট নেই
+              কোনো প্রোডাক্ট পাওয়া যায়নি
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -188,13 +222,13 @@ export default function MobileCategoryPage() {
                   />
                   <div style={{ padding: '8px' }}>
                     <p style={{
-                      fontSize: '10px', fontWeight: '600', color: '#333', margin: '0 0 2px 0',
+                      fontSize: '11px', fontWeight: '600', color: '#333', margin: '0 0 3px 0',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>{product.title}</p>
                     {product.rating > 0 && (
-                      <span style={{ fontSize: '9px', color: '#FFB347' }}>⭐ {product.rating}</span>
+                      <span style={{ fontSize: '10px', color: '#FFB347', fontWeight: '600' }}>⭐ {product.rating}</span>
                     )}
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#FA5A28', marginTop: '2px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FA5A28', marginTop: '3px' }}>
                       ৳{product.price?.toLocaleString()}
                     </div>
                   </div>
@@ -204,13 +238,6 @@ export default function MobileCategoryPage() {
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
