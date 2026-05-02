@@ -31,6 +31,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   useEffect(() => {
     async function loadProduct() {
@@ -47,6 +48,42 @@ export default function ProductDetailPage() {
     }
     if (id) loadProduct();
   }, [id]);
+
+  // উইশলিস্ট চেক
+  useEffect(() => {
+    async function checkWishlist() {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user || !product) return;
+      
+      const { data } = await supabase
+        .from('wishlist')
+        .select('*')
+        .eq('user_id', userData.user.id)
+        .eq('product_id', product.id)
+        .single();
+      
+      setIsWishlisted(!!data);
+    }
+    if (product) checkWishlist();
+  }, [product]);
+
+  async function toggleWishlist() {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      alert('আগে লগইন করুন!');
+      router.push('/auth/login');
+      return;
+    }
+    
+    if (isWishlisted) {
+      await supabase.from('wishlist').delete().eq('user_id', userData.user.id).eq('product_id', product!.id);
+      alert('❤️ উইশলিস্ট থেকে সরানো হয়েছে');
+    } else {
+      await supabase.from('wishlist').insert({ user_id: userData.user.id, product_id: product!.id });
+      alert('✅ উইশলিস্টে যোগ হয়েছে!');
+    }
+    setIsWishlisted(!isWishlisted);
+  }
 
   const addToCart = async () => {
     if (!product) return;
@@ -156,7 +193,11 @@ export default function ProductDetailPage() {
               <button onClick={() => { navigator.share?.({ title: product.title, text: `${product.title} - ৳${product.price}`, url: shareUrl }); }}
                 style={{ padding: '10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '3px', cursor: 'pointer', fontSize: '16px' }}>📤</button>
               
-              <button style={{ padding: '10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '3px', cursor: 'pointer', fontSize: '16px' }}>❤️</button>
+              {/* আপডেটেড হৃদয় বাটন */}
+              <button onClick={toggleWishlist} 
+                style={{ padding: '10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '3px', cursor: 'pointer', fontSize: '16px', color: isWishlisted ? '#e62e04' : '#333' }}>
+                {isWishlisted ? '❤️' : '🤍'}
+              </button>
             </div>
           </div>
         </div>
