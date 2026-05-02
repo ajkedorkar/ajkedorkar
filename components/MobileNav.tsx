@@ -85,7 +85,7 @@ export default function MobileNav() {
           transition: all 0.2s ease;
           color: #999;
         }
-        .nav-item.active { color: #e62e04; }
+        .nav-item.active { color: '#e62e04'; }
         .icon-wrapper {
           margin-bottom: 1px;
           transition: transform 0.2s ease;
@@ -100,6 +100,13 @@ export default function MobileNav() {
         .nav-item:active {
           opacity: 0.6;
           transform: scale(0.96);
+        }
+
+        /* PC-তে লুকাবে */
+        @media (min-width: 1024px) {
+          .mobile-nav-custom {
+            display: none !important;
+          }
         }
       `}</style>
     </div>
