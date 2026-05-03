@@ -1,30 +1,16 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+const ADMIN_EMAIL = 'ajkedorkar@gmail.com';
 
 const menuItems = [
-  { 
-    name: 'ড্যাশবোর্ড', icon: '📊', href: '/admin',
-    children: [
-      { name: 'ওভারভিউ', href: '/admin' },
-      { name: 'অ্যানালিটিক্স', href: '/admin/analytics' },
-    ]
-  },
-  { 
-    name: 'ব্যানার', icon: '🎠', href: '/admin',
-    children: [
-      { name: 'সব ব্যানার', href: '/admin' },
-      { name: 'নতুন ব্যানার', href: '/admin#add' },
-    ]
-  },
-  { 
-    name: 'ক্যাটাগরি', icon: '🗂️', href: '/admin/categories',
-    children: [
-      { name: 'সব ক্যাটাগরি', href: '/admin/categories' },
-    ]
-  },
+  { name: 'ড্যাশবোর্ড', icon: '📊', href: '/admin' },
+  { name: 'ব্যানার', icon: '🎠', href: '/admin' },
+  { name: 'ক্যাটাগরি', icon: '🗂️', href: '/admin/categories' },
   { name: 'প্রোডাক্ট', icon: '📦', href: '/admin/products' },
   { name: 'অর্ডার', icon: '📋', href: '/admin/orders' },
   { name: 'ইউজার', icon: '👥', href: '/admin/users' },
@@ -33,14 +19,46 @@ const menuItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const [authorized, setAuthorized] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [stats, setStats] = useState({ banners: 0, categories: 0, products: 0, orders: 0 });
 
+  // Auth guard
   useEffect(() => {
+    async function checkAuth() {
+      // লগইন পেজ হলে চেক করবো না
+      if (pathname === '/admin/login' || pathname === '/admin/callback') {
+        setAuthorized(true);
+        setChecking(false);
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push('/admin/login');
+        return;
+      }
+      
+      if (data.session.user.email !== ADMIN_EMAIL) {
+        await supabase.auth.signOut();
+        alert('❌ আপনি অ্যাডমিন নন!');
+        router.push('/admin/login');
+        return;
+      }
+      
+      setAuthorized(true);
+      setChecking(false);
+    }
+    checkAuth();
+  }, [pathname]);
+
+  // স্ট্যাট লোড
+  useEffect(() => {
+    if (!authorized) return;
     async function loadStats() {
       try {
-        const { supabase } = await import('@/lib/supabase');
         const [bannerRes, catRes, productRes, orderRes] = await Promise.all([
           supabase.from('banners').select('*', { count: 'exact', head: true }),
           supabase.from('categories').select('*', { count: 'exact', head: true }),
@@ -56,21 +74,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } catch (e) {}
     }
     loadStats();
-  }, []);
+  }, [authorized]);
+
+  if (checking) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>⏳ চেক করা হচ্ছে...</div>;
+  if (!authorized && pathname !== '/admin/login' && pathname !== '/admin/callback') return null;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
       
       {/* সাইডবার (PC) */}
       <aside className="admin-sidebar" style={{
-        width: '260px',
-        background: 'linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%)',
-        color: 'white',
-        position: 'fixed',
-        top: 0, left: 0, bottom: 0,
+        width: '260px', background: 'linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%)',
+        color: 'white', position: 'fixed', top: 0, left: 0, bottom: 0,
         zIndex: 50, overflowY: 'auto', display: 'none',
       }}>
-        {/* লোগো */}
         <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <Link href="/admin" style={{ textDecoration: 'none', color: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -88,7 +105,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
         </div>
 
-        {/* স্ট্যাট কার্ড (৪টা) */}
         <div style={{ padding: '16px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#FFB347' }}>{stats.banners}</div>
@@ -108,56 +124,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* মেনু */}
         <nav style={{ padding: '12px 0' }}>
           {menuItems.map((item, i) => (
-            <div key={i}>
-              <div onClick={() => setExpandedMenu(expandedMenu === item.name ? null : item.name)}
-                style={{
-                  padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '10px',
-                  cursor: 'pointer',
-                  color: pathname === item.href ? '#FFB347' : 'rgba(255,255,255,0.7)',
-                  background: pathname === item.href ? 'rgba(255,179,71,0.1)' : 'transparent',
-                  borderLeft: pathname === item.href ? '3px solid #FFB347' : '3px solid transparent',
-                  fontSize: '13px',
-                  fontWeight: pathname === item.href ? '600' : '400',
-                  transition: 'all 0.2s',
-                }}
-              >
+            <Link key={i} href={item.href} style={{ textDecoration: 'none' }}>
+              <div style={{
+                padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer',
+                color: pathname === item.href ? '#FFB347' : 'rgba(255,255,255,0.7)',
+                background: pathname === item.href ? 'rgba(255,179,71,0.1)' : 'transparent',
+                borderLeft: pathname === item.href ? '3px solid #FFB347' : '3px solid transparent',
+                fontSize: '13px', fontWeight: pathname === item.href ? '600' : '400',
+              }}>
                 <span style={{ fontSize: '16px', width: '24px', textAlign: 'center' }}>{item.icon}</span>
                 <span style={{ flex: 1 }}>{item.name}</span>
-                {item.children && (
-                  <span style={{ fontSize: '10px', opacity: 0.5 }}>
-                    {expandedMenu === item.name ? '▾' : '▸'}
-                  </span>
-                )}
               </div>
-              
-              {item.children && expandedMenu === item.name && (
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 0' }}>
-                  {item.children.map((child, j) => (
-                    <Link key={j} href={child.href} style={{ textDecoration: 'none' }}>
-                      <div style={{
-                        padding: '7px 20px 7px 54px', fontSize: '12px',
-                        color: pathname === child.href ? '#FFB347' : 'rgba(255,255,255,0.5)',
-                      }}>
-                        {child.name}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            </Link>
           ))}
         </nav>
 
         <div style={{ position: 'absolute', bottom: '20px', left: '16px', right: '16px' }}>
-          <Link href="/" target="_blank" style={{
-            display: 'block', textAlign: 'center', padding: '10px',
-            background: 'linear-gradient(135deg, #e62e04, #FFB347)',
-            borderRadius: '8px', color: 'white', textDecoration: 'none',
-            fontSize: '12px', fontWeight: '600',
-          }}>🏠 সাইট দেখুন</Link>
+          <button onClick={async () => { await supabase.auth.signOut(); router.push('/admin/login'); }} style={{
+            display: 'block', width: '100%', textAlign: 'center', padding: '10px',
+            background: '#e62e04', borderRadius: '8px', color: 'white', border: 'none',
+            fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+          }}>🚪 লগআউট</button>
         </div>
       </aside>
 
@@ -189,11 +178,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             {menuItems.map((item, i) => (
               <Link key={i} href={item.href} style={{ textDecoration: 'none' }} onClick={() => setSidebarOpen(false)}>
-                <div style={{
-                  padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px',
-                  color: pathname === item.href ? '#FFB347' : 'white',
-                  fontSize: '13px',
-                }}>
+                <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontSize: '13px' }}>
                   <span>{item.icon}</span> {item.name}
                 </div>
               </Link>
@@ -215,13 +200,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </span>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <span style={{ fontSize: '20px', cursor: 'pointer' }}>🔔</span>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #e62e04, #FFB347)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: '700', fontSize: '14px',
-            }}>A</div>
+            <button onClick={async () => { await supabase.auth.signOut(); router.push('/admin/login'); }} style={{
+              background: '#e62e04', color: 'white', border: 'none', padding: '6px 14px',
+              borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '11px',
+            }}>🚪 লগআউট</button>
           </div>
         </div>
 
