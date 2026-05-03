@@ -79,7 +79,6 @@ export default function UploadPage() {
     load();
   }, []);
 
-  // গাইড অ্যানিমেশন
   useEffect(() => {
     const timer = setInterval(() => {
       setIsAnimating(true);
@@ -92,24 +91,16 @@ export default function UploadPage() {
   }, []);
 
   async function handleImageUpload(file: File, index: number) {
-    const newProgress = [...uploadProgress];
-    newProgress[index] = 0;
-    setUploadProgress(newProgress);
-
     const compressed = await compressImage(file, 30);
     const fileName = `upload_${Date.now()}_${index}.webp`;
-    
     const { data, error } = await supabase.storage.from('banners').upload(fileName, compressed, {
       contentType: 'image/webp', upsert: true,
     });
-
     if (!error && data) {
       const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
       const newImages = [...form.images]; newImages[index] = url;
       const newWebp = [...form.webp_images]; newWebp[index] = url;
       setForm({ ...form, images: newImages, webp_images: newWebp });
-      newProgress[index] = 100;
-      setUploadProgress(newProgress);
     }
   }
 
@@ -122,37 +113,22 @@ export default function UploadPage() {
   async function handleSubmit() {
     if (!form.title || !form.price || !form.phone) return alert('নাম, প্রাইস ও ফোন আবশ্যক!');
     if (form.images.filter(Boolean).length === 0) return alert('কমপক্ষে ১টি ইমেজ দিন!');
-
     if (!seller.is_premium && (seller.total_uploads || 0) >= 4) {
-      return alert('❌ আপনার ফ্রি লিমিট (৪টি) শেষ! প্রিমিয়ামে আপগ্রেড করুন।');
+      return alert('❌ আপনার ফ্রি লিমিট শেষ! নিচে প্রিমিয়াম আপগ্রেড করুন।');
     }
-
     setSubmitting(true);
-
     const { error } = await supabase.from('products').insert({
-      title: form.title,
-      price: parseFloat(form.price),
-      category: form.category,
-      description: form.description,
-      image_url: form.images.find(Boolean) || '',
-      webp_url: form.webp_images.find(Boolean) || '',
-      uploaded_by: user.id,
-      status: 'pending',
-      upload_type: form.upload_type,
-      seller_phone: form.phone,
+      title: form.title, price: parseFloat(form.price), category: form.category,
+      description: form.description, image_url: form.images.find(Boolean) || '',
+      webp_url: form.webp_images.find(Boolean) || '', uploaded_by: user.id,
+      status: 'pending', upload_type: form.upload_type, seller_phone: form.phone,
       is_premium: seller.is_premium,
     });
-
     if (!error) {
-      await supabase.from('sellers').update({
-        total_uploads: (seller.total_uploads || 0) + 1,
-      }).eq('id', user.id);
-
+      await supabase.from('sellers').update({ total_uploads: (seller.total_uploads || 0) + 1 }).eq('id', user.id);
       alert('✅ প্রোডাক্ট জমা হয়েছে! অ্যাপ্রুভালের পর দেখা যাবে।');
       router.push('/');
-    } else {
-      alert('❌ এরর: ' + error.message);
-    }
+    } else { alert('❌ এরর: ' + error.message); }
     setSubmitting(false);
   }
 
@@ -163,33 +139,20 @@ export default function UploadPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5', fontFamily: 'Arial', paddingBottom: '80px' }}>
-      
-      {/* PC Header */}
       <div className="pc-hdr"><PCHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} /></div>
-
-      {/* মোবাইল ব্যাক */}
       <button className="mob-back" onClick={() => router.back()}>←</button>
 
       <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px' }}>
-        
-        {/* মেইন কার্ড */}
-        <div style={{
-          background: 'white', borderRadius: '16px', padding: '24px 20px',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-        }}>
+        <div style={{ background: 'white', borderRadius: '16px', padding: '24px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           
-          {/* হেডার */}
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             <div style={{ fontSize: '48px', marginBottom: '4px' }}>📤</div>
-            <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#1a1a2e', margin: '0 0 4px 0' }}>
-              প্রোডাক্ট আপলোড করুন
-            </h1>
+            <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#1a1a2e', margin: '0 0 4px 0' }}>প্রোডাক্ট আপলোড করুন</h1>
             <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
               {seller?.is_premium ? '👑 প্রিমিয়াম সেলার - আনলিমিটেড' : `🆓 ফ্রি: ${remainingFree}টি বাকি`}
             </p>
           </div>
 
-          {/* অ্যানিমেটেড গাইড বার */}
           <div style={{
             background: 'linear-gradient(135deg, #FFF3E0, #FFE0B2)', borderRadius: '10px',
             padding: '10px 14px', marginBottom: '16px', textAlign: 'center',
@@ -197,31 +160,23 @@ export default function UploadPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <span style={{
-              transition: 'all 0.3s ease',
-              opacity: isAnimating ? 0 : 1,
+              transition: 'all 0.3s ease', opacity: isAnimating ? 0 : 1,
               transform: isAnimating ? 'translateY(-8px)' : 'translateY(0)',
-            }}>
-              {guideTexts[guideIndex]}
-            </span>
+            }}>{guideTexts[guideIndex]}</span>
           </div>
 
-          {/* সতর্কবাণী */}
           <div style={{
             background: '#FFF8E1', borderRadius: '10px', padding: '12px 14px',
             marginBottom: '16px', fontSize: '11px', color: '#F57F17',
           }}>
-            {warnings.map((w, i) => (
-              <div key={i} style={{ marginBottom: i < warnings.length - 1 ? '4px' : 0 }}>{w}</div>
-            ))}
+            {warnings.map((w, i) => <div key={i} style={{ marginBottom: i < warnings.length - 1 ? '4px' : 0 }}>{w}</div>)}
           </div>
 
-          {/* ফর্ম */}
           <div style={{ display: 'grid', gap: '12px' }}>
             <div>
               <label style={lbl}>📝 প্রোডাক্টের নাম *</label>
               <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="যেমন: তিলের খাজা" style={inp} />
             </div>
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div>
                 <label style={lbl}>💰 প্রাইস (৳) *</label>
@@ -232,24 +187,18 @@ export default function UploadPage() {
                 <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="০১XXXXXXXXX" type="tel" style={inp} />
               </div>
             </div>
-
             <div>
               <label style={lbl}>📂 ক্যাটাগরি *</label>
               <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} style={inp}>
-                {categories.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
+                {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
-
             <div>
               <label style={lbl}>📄 বিবরণ</label>
               <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} 
-                placeholder="প্রোডাক্টের বিস্তারিত লিখুন..." 
-                style={{...inp, height: '80px', resize: 'vertical'}} />
+                placeholder="প্রোডাক্টের বিস্তারিত লিখুন..." style={{...inp, height: '80px', resize: 'vertical'}} />
             </div>
 
-            {/* ইমেজ সেকশন */}
             <div>
               <label style={lbl}>🖼️ ইমেজ ({uploadedCount}/৪) ✕ দিয়ে রিমুভ করতে পারবেন</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
@@ -263,9 +212,8 @@ export default function UploadPage() {
                       <>
                         <img src={form.webp_images[i] || form.images[i]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                         <button onClick={() => removeImage(i)} style={{
-                          position: 'absolute', top: '4px', right: '4px',
-                          background: '#e62e04', color: 'white', border: 'none',
-                          borderRadius: '50%', width: '22px', height: '22px',
+                          position: 'absolute', top: '4px', right: '4px', background: '#e62e04', color: 'white',
+                          border: 'none', borderRadius: '50%', width: '22px', height: '22px',
                           cursor: 'pointer', fontSize: '12px', fontWeight: '700',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>✕</button>
@@ -282,7 +230,17 @@ export default function UploadPage() {
               </div>
             </div>
 
-            {/* সাবমিট বাটন */}
+            {/* 🔥 প্রিমিয়াম আপগ্রেড বাটন */}
+            {!seller?.is_premium && remainingFree === 0 && (
+              <button onClick={() => router.push('/mobile/upgrade')} style={{
+                width: '100%', padding: '12px', background: 'linear-gradient(135deg, #1a1a2e, #0f0f1a)',
+                color: 'white', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer',
+                fontSize: '14px',
+              }}>
+                👑 প্রিমিয়াম আপগ্রেড (৳৯৯/মাস) — আনলিমিটেড আপলোড
+              </button>
+            )}
+
             <button onClick={handleSubmit} disabled={submitting} style={{
               padding: '14px', marginTop: '8px',
               background: submitting ? '#ccc' : 'linear-gradient(135deg, #e62e04, #FF6B35)',
@@ -299,10 +257,7 @@ export default function UploadPage() {
       <style jsx global>{`
         .pc-hdr { display: none; }
         .mob-back { display: flex; position: fixed; top: 12px; left: 12px; z-index: 100; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 18px; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
-        @media (min-width: 1024px) {
-          .pc-hdr { display: block !important; }
-          .mob-back { display: none !important; }
-        }
+        @media (min-width: 1024px) { .pc-hdr { display: block !important; } .mob-back { display: none !important; } }
       `}</style>
     </div>
   );
