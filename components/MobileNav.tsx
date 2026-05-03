@@ -20,7 +20,7 @@ export default function MobileNav() {
   const navItems = [
     { icon: '🏠', label: 'Home', href: '/' },
     { icon: '🗂️', label: 'Category', href: '/category/mobile' },
-    { icon: '🛒', label: 'Cart', href: '/cart' },
+    { icon: '📤', label: 'Upload', href: '/mobile/upload' },
     { icon: '👤', label: user ? 'Account' : 'Login', href: user ? '/account' : '/auth/login' },
   ];
 

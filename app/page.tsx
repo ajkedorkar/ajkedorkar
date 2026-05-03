@@ -109,13 +109,8 @@ export default function Home() {
   }, [searchPlaceholders]);
 
   const handleCategoryClick = (slug: string) => {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
-  if (isMobile) {
-    router.push('/category/mobile');
-  } else {
     router.push(`/category/${slug}`);
-  }
-};
+  };
 
   return (
     <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh', fontFamily: 'Inter, system-ui' }}>
