@@ -13,7 +13,6 @@ const menuItems = [
   { name: 'ক্যাটাগরি', icon: '🗂️', href: '/admin/categories' },
   { name: 'প্রোডাক্ট', icon: '📦', href: '/admin/products' },
   { name: 'অর্ডার', icon: '📋', href: '/admin/orders' },
-  { name: 'ইউজার', icon: '👥', href: '/admin/users' },
   { name: 'সেটিংস', icon: '⚙️', href: '/admin/settings' },
 ];
 
@@ -25,38 +24,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checking, setChecking] = useState(true);
   const [stats, setStats] = useState({ banners: 0, categories: 0, products: 0, orders: 0 });
 
-  // Auth guard
-  useEffect(() => {
-    async function checkAuth() {
-      // লগইন পেজ হলে চেক করবো না
-      if (pathname === '/admin/login' || pathname === '/admin/callback') {
-        setAuthorized(true);
-        setChecking(false);
-        return;
-      }
+  // লগইন/কলব্যাক পেজ কিনা চেক
+  const isAuthPage = pathname === '/admin/login' || pathname === '/admin/callback';
 
+  useEffect(() => {
+    // লগইন পেজ হলে auth চেক বাদ
+    if (isAuthPage) {
+      setAuthorized(true);
+      setChecking(false);
+      return;
+    }
+
+    async function checkAuth() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
         router.push('/admin/login');
         return;
       }
-      
       if (data.session.user.email !== ADMIN_EMAIL) {
         await supabase.auth.signOut();
-        alert('❌ আপনি অ্যাডমিন নন!');
         router.push('/admin/login');
         return;
       }
-      
       setAuthorized(true);
       setChecking(false);
     }
     checkAuth();
   }, [pathname]);
 
-  // স্ট্যাট লোড
   useEffect(() => {
-    if (!authorized) return;
+    if (!authorized || isAuthPage) return;
     async function loadStats() {
       try {
         const [bannerRes, catRes, productRes, orderRes] = await Promise.all([
@@ -76,13 +73,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     loadStats();
   }, [authorized]);
 
-  if (checking) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>⏳ চেক করা হচ্ছে...</div>;
-  if (!authorized && pathname !== '/admin/login' && pathname !== '/admin/callback') return null;
+  if (checking) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f0f2f5' }}>⏳ চেক করা হচ্ছে...</div>;
+  }
+
+  // 🔥 লগইন/কলব্যাক পেজ — শুধু children, কোনো সাইডবার/টপবার নাই
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
+
+  // 🔥 অথরাইজড না হলে কিছু দেখাবে না
+  if (!authorized) return null;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
       
-      {/* সাইডবার (PC) */}
+      {/* ===== PC সাইডবার ===== */}
       <aside className="admin-sidebar" style={{
         width: '260px', background: 'linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%)',
         color: 'white', position: 'fixed', top: 0, left: 0, bottom: 0,
@@ -128,14 +134,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {menuItems.map((item, i) => (
             <Link key={i} href={item.href} style={{ textDecoration: 'none' }}>
               <div style={{
-                padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer',
-                color: pathname === item.href ? '#FFB347' : 'rgba(255,255,255,0.7)',
+                padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '10px',
+                cursor: 'pointer', color: pathname === item.href ? '#FFB347' : 'rgba(255,255,255,0.7)',
                 background: pathname === item.href ? 'rgba(255,179,71,0.1)' : 'transparent',
                 borderLeft: pathname === item.href ? '3px solid #FFB347' : '3px solid transparent',
                 fontSize: '13px', fontWeight: pathname === item.href ? '600' : '400',
+                transition: 'all 0.2s',
               }}>
                 <span style={{ fontSize: '16px', width: '24px', textAlign: 'center' }}>{item.icon}</span>
-                <span style={{ flex: 1 }}>{item.name}</span>
+                <span>{item.name}</span>
               </div>
             </Link>
           ))}
@@ -150,29 +157,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* মোবাইল হেডার */}
+      {/* ===== মোবাইল হেডার ===== */}
       <header className="admin-mobile-header" style={{
         background: 'linear-gradient(135deg, #0f0f1a, #1a1a2e)', color: 'white',
         padding: '12px 16px', display: 'flex', justifyContent: 'space-between',
         alignItems: 'center', position: 'sticky', top: 0, zIndex: 40,
       }}>
-        <button onClick={() => setSidebarOpen(true)} style={{
-          background: 'none', border: 'none', color: 'white', fontSize: '22px', cursor: 'pointer',
-        }}>☰</button>
+        <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '22px', cursor: 'pointer' }}>☰</button>
         <span style={{ fontWeight: '800', fontSize: '15px' }}>🛠️ AjkeDorkar</span>
         <Link href="/" style={{ color: 'white', fontSize: '16px', textDecoration: 'none' }}>🏠</Link>
       </header>
 
       {/* মোবাইল সাইডবার */}
       {sidebarOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
-          background: 'rgba(0,0,0,0.6)',
-        }} onClick={() => setSidebarOpen(false)}>
-          <div style={{
-            background: 'linear-gradient(180deg, #0f0f1a, #1a1a2e)',
-            width: '260px', height: '100%', padding: '20px 0', color: 'white',
-          }} onClick={e => e.stopPropagation()}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100, background: 'rgba(0,0,0,0.6)' }} onClick={() => setSidebarOpen(false)}>
+          <div style={{ background: 'linear-gradient(180deg, #0f0f1a, #1a1a2e)', width: '260px', height: '100%', padding: '20px 0', color: 'white' }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: '0 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '10px' }}>
               <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '800' }}>🛠️ AjkeDorkar</h2>
             </div>
@@ -187,26 +186,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      {/* মেইন কন্টেন্ট */}
+      {/* ===== মেইন কন্টেন্ট ===== */}
       <div className="admin-main" style={{ flex: 1, marginLeft: '0', minWidth: 0 }}>
-        <div style={{
-          background: 'white', padding: '14px 24px', display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', borderBottom: '1px solid #eee', flexWrap: 'wrap', gap: '10px',
-        }}>
+        <div style={{ background: 'white', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', flexWrap: 'wrap', gap: '10px' }}>
           <div>
             <span style={{ fontSize: '12px', color: '#999' }}>Pages /</span>
             <span style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginLeft: '4px' }}>
               {menuItems.find(m => m.href === pathname)?.name || 'ড্যাশবোর্ড'}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/admin/login'); }} style={{
-              background: '#e62e04', color: 'white', border: 'none', padding: '6px 14px',
-              borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '11px',
-            }}>🚪 লগআউট</button>
-          </div>
+          <button onClick={async () => { await supabase.auth.signOut(); router.push('/admin/login'); }} style={{
+            background: '#e62e04', color: 'white', border: 'none', padding: '6px 14px',
+            borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '11px',
+          }}>🚪 লগআউট</button>
         </div>
-
         <div style={{ padding: '20px 24px' }}>
           {children}
         </div>
