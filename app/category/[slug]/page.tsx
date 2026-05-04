@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import PCHeader from '@/components/PCHeader';
 import MobileHeader from '@/components/MobileHeader';
 import OfferZoneTheme from '@/components/category-themes/offer-zone';
-
+import MobileTheme from '@/components/category-themes/mobile';
 const categoryMap: Record<string, { label: string; icon: string }> = {
   'offer-zone': { label: 'অফার জোন', icon: '🎯' },
   'mobile': { label: 'মোবাইল', icon: '📱' },
@@ -68,7 +68,9 @@ export default function CategoryPage() {
   if (slug === 'offer-zone') {
     return <OfferZoneTheme />;
   }
-
+if (slug === 'mobile') {
+  return <MobileTheme />;
+}
   // সার্চ বারের টাইপিং অ্যানিমেশনের জন্য
   useEffect(() => {
     let i = 0, isDeleting = false;
