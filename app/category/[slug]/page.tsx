@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-// পিসি এবং মোবাইল উভয় হেডার ইমপোর্ট করা হলো
 import PCHeader from '@/components/PCHeader';
 import MobileHeader from '@/components/MobileHeader';
+import OfferZoneTheme from '@/components/category-themes/offer-zone';
 
 const categoryMap: Record<string, { label: string; icon: string }> = {
   'offer-zone': { label: 'অফার জোন', icon: '🎯' },
@@ -64,6 +64,11 @@ export default function CategoryPage() {
   const [typingText, setTypingText] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // 🚀 অফার জোন থিম চেক — আগে বসাতে হবে সবকিছুর আগে!
+  if (slug === 'offer-zone') {
+    return <OfferZoneTheme />;
+  }
+
   // সার্চ বারের টাইপিং অ্যানিমেশনের জন্য
   useEffect(() => {
     let i = 0, isDeleting = false;
@@ -101,7 +106,6 @@ export default function CategoryPage() {
       if (data && data.length > 0) {
         setProducts(data);
       } else {
-        // ডামি বা স্যাম্পল প্রোডাক্ট ডাটা
         const sampleProducts = [
           { id: 1, title: 'Traditional Premium Kanjivaram Silk Saree', price: 4500, image_url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500', sold: 420 },
           { id: 2, title: 'Elegant Floral Georgette Salwar Kameez', price: 2850, image_url: 'https://images.unsplash.com/photo-1610030469980-44ea657d4049?w=500', sold: 380 },
