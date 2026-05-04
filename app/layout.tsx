@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn">
+    <html lang="bn" data-scroll-behavior="smooth">
       <body style={{ margin: 0, padding: 0, backgroundColor: '#f5f5f5' }}>
         {children}
       </body>
