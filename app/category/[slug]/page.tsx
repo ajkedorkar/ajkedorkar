@@ -9,7 +9,7 @@ import OfferZoneTheme from '@/components/category-themes/offer-zone';
 import MobileTheme from '@/components/category-themes/mobile';
 const categoryMap: Record<string, { label: string; icon: string }> = {
   'offer-zone': { label: 'অফার জোন', icon: '🎯' },
-  'mobile': { label: 'মোবাইল', icon: '📱' },
+  'mobile': { label: 'ফোন', icon: '📱' },
   'computer': { label: 'কম্পিউটার', icon: '💻' },
   'electronics': { label: 'ইলেকট্রনিক্স', icon: '⚡' },
   'fashion': { label: 'ফ্যাশন', icon: '👗' },
@@ -32,7 +32,7 @@ const categoryMap: Record<string, { label: string; icon: string }> = {
 
 const allCategories = [
   { icon: '🎯', label: 'অফার জোন', slug: 'offer-zone' },
-  { icon: '📱', label: 'মোবাইল', slug: 'mobile' },
+  { icon: '📱', label: 'ফোন', slug: 'mobile' },
   { icon: '💻', label: 'কম্পিউটার', slug: 'computer' },
   { icon: '⚡', label: 'ইলেকট্রনিক্স', slug: 'electronics' },
   { icon: '👗', label: 'ফ্যাশন', slug: 'fashion' },

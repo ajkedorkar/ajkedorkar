@@ -7,7 +7,7 @@ import OfferZoneTheme from '@/components/category-themes/offer-zone';
 import MobileTheme from '@/components/category-themes/mobile';
 const categories = [
   { label: 'অফার জোন', slug: 'offer-zone', icon: '🎯', color: '#FFF0F0', bgColor: '#FF416C' },
-  { label: 'মোবাইল', slug: 'mobile', icon: '📱', color: '#F0F5FF', bgColor: '#1a73e8' },
+  { label: 'ফোন', slug: 'mobile', icon: '📱', color: '#F0F5FF', bgColor: '#1a73e8' },
   { label: 'কম্পিউটার', slug: 'computer', icon: '💻', color: '#F0FFF0', bgColor: '#00a651' },
   { label: 'ইলেকট্রনিক্স', slug: 'electronics', icon: '⚡', color: '#FFF8F0', bgColor: '#f85606' },
   { label: 'ফ্যাশন', slug: 'fashion', icon: '👗', color: '#FFF0F8', bgColor: '#e62e04' },

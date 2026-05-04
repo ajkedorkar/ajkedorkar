@@ -13,7 +13,7 @@ import MobileNav from '@/components/MobileNav';
 
 const leftCategories = [
   { icon: '🎯', label: 'অফার জোন', slug: 'offer-zone' },
-  { icon: '📱', label: 'মোবাইল', slug: 'mobile' },
+  { icon: '📱', label: 'ফোন', slug: 'mobile' },
   { icon: '💻', label: 'কম্পিউটার', slug: 'computer' },
   { icon: '⚡', label: 'ইলেকট্রনিক্স', slug: 'electronics' },
   { icon: '👗', label: 'ফ্যাশন', slug: 'fashion' },
