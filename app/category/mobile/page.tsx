@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import OfferZoneTheme from '@/components/category-themes/offer-zone';
 
 const categories = [
   { label: 'অফার জোন', slug: 'offer-zone', icon: '🎯', color: '#FFF0F0', bgColor: '#FF416C' },
@@ -37,6 +38,14 @@ const announcementTexts = [
 
 export default function MobileCategoryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const themeSlug = searchParams.get('theme');
+
+  // 🚀 থিম চেক — offer-zone হলে নতুন থিম দেখাবে
+  if (themeSlug === 'offer-zone') {
+    return <OfferZoneTheme />;
+  }
+
   const [activeCategory, setActiveCategory] = useState('offer-zone');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
