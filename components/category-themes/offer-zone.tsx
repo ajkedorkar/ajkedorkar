@@ -7,7 +7,7 @@ import PCHeader from '@/components/PCHeader';
 
 const allCategories = [
   { icon: '🎯', label: 'অফার জোন', slug: 'offer-zone' },
-  { icon: '📱', label: 'মোবাইল', slug: 'mobile' },
+  { icon: '📱', label: 'ফোন', slug: 'mobile' },
   { icon: '💻', label: 'কম্পিউটার', slug: 'computer' },
   { icon: '⚡', label: 'ইলেকট্রনিক্স', slug: 'electronics' },
   { icon: '👗', label: 'ফ্যাশন', slug: 'fashion' },
@@ -60,6 +60,7 @@ export default function OfferZoneTheme() {
       if (data && data.length > 0) {
         setFlashDeals(data.filter((_, i) => i < 5));
         setBestDeals(data.filter((_, i) => i >= 5));
+        setProducts(data);
       } else {
         const dummy = Array.from({ length: 12 }, (_, i) => ({
           id: i + 1,
@@ -74,6 +75,7 @@ export default function OfferZoneTheme() {
         }));
         setFlashDeals(dummy.filter((_, i) => i < 5));
         setBestDeals(dummy.filter((_, i) => i >= 5));
+        setProducts(dummy);
       }
       setLoading(false);
     }
@@ -120,7 +122,7 @@ export default function OfferZoneTheme() {
             <div style={{
               background: 'linear-gradient(135deg, #FF416C, #FF6B35)',
               borderRadius: '12px', padding: '20px 24px', color: 'white',
-              marginBottom: '16px', textAlign: 'center',
+              marginBottom: '12px', textAlign: 'center',
             }}>
               <div style={{ fontSize: '28px', fontWeight: '800' }}>⚡ OFFER ZONE</div>
               <div style={{ fontSize: '14px', opacity: 0.9, marginTop: '4px' }}>Flash Sale চলছে!</div>
@@ -134,6 +136,9 @@ export default function OfferZoneTheme() {
                 {String(timeLeft.seconds).padStart(2, '0')}
               </div>
             </div>
+
+            {/* সাব-ক্যাটাগরি বার */}
+            <SubCategoryBar categorySlug="offer-zone" onSelect={(slug) => console.log('Selected:', slug)} />
 
             {/* Deal of the Day */}
             {flashDeals.length > 0 && (
@@ -220,6 +225,52 @@ export default function OfferZoneTheme() {
           .product-grid { grid-template-columns: repeat(4, 1fr) !important; }
         }
       `}</style>
+    </div>
+  );
+}
+
+// সাব-ক্যাটাগরি বার কম্পোনেন্ট
+function SubCategoryBar({ categorySlug, onSelect }: { categorySlug: string; onSelect: (slug: string) => void }) {
+  const [subs, setSubs] = useState<any[]>([]);
+  const [activeSub, setActiveSub] = useState('all');
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from('subcategories')
+        .select('*')
+        .eq('category_slug', categorySlug)
+        .eq('is_active', true)
+        .order('id');
+      if (data && data.length > 0) {
+        setSubs([{ name: 'সব', slug: 'all', icon: '🛍️' }, ...data]);
+      }
+    }
+    load();
+  }, [categorySlug]);
+
+  if (subs.length === 0) return null;
+
+  return (
+    <div style={{
+      display: 'flex', gap: '8px', overflowX: 'auto', padding: '6px 0 12px 0',
+    }}>
+      {subs.map((sub, i) => (
+        <button
+          key={i}
+          onClick={() => { setActiveSub(sub.slug); onSelect(sub.slug); }}
+          style={{
+            padding: '7px 14px', borderRadius: '20px', cursor: 'pointer',
+            fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap',
+            background: activeSub === sub.slug ? '#FF416C' : 'white',
+            color: activeSub === sub.slug ? 'white' : '#555',
+            border: activeSub === sub.slug ? 'none' : '1px solid #ddd',
+            transition: 'all 0.2s',
+          }}
+        >
+          {sub.icon} {sub.name}
+        </button>
+      ))}
     </div>
   );
 }
