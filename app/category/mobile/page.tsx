@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import OfferZoneTheme from '@/components/category-themes/offer-zone';
@@ -36,7 +36,7 @@ const announcementTexts = [
   "💎 প্রিমিয়াম কোয়ালিটি প্রোডাক্ট!",
 ];
 
-export default function MobileCategoryPage() {
+function MobileCategoryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const themeSlug = searchParams.get('theme');
@@ -56,7 +56,7 @@ export default function MobileCategoryPage() {
   const activeCat = categories.find(c => c.slug === activeCategory);
   const currentColor = activeCat?.bgColor || '#e62e04';
 
-  // অ্যানাউন্সমেন্ট স্লাইডার (ফুল ফিচার)
+  // অ্যানাউন্সমেন্ট স্লাইডার
   useEffect(() => {
     const timer = setInterval(() => {
       setIsAnimating(true);
@@ -121,7 +121,6 @@ export default function MobileCategoryPage() {
         zIndex: 100,
         flexShrink: 0,
       }}>
-        {/* উপরের রো */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
           <button onClick={() => router.push('/')} style={{
             background: 'rgba(255,255,255,0.25)', border: 'none', color: 'white',
@@ -134,14 +133,12 @@ export default function MobileCategoryPage() {
           </h1>
         </div>
 
-        {/* স্ট্যাট বার */}
         <div style={{ display: 'flex', gap: '14px', fontSize: '12px', opacity: 0.95, marginBottom: '8px', flexWrap: 'wrap' }}>
           <span>📦 {stats.total}টি প্রোডাক্ট</span>
           {stats.avgRating > 0 && <span>⭐ {stats.avgRating}</span>}
           {stats.totalSold > 0 && <span>🔥 {stats.totalSold} বিক্রি</span>}
         </div>
 
-        {/* অ্যানিমেটেড টেক্সট স্লাইডার (ফুল ফিচার) */}
         <div style={{
           background: 'rgba(0,0,0,0.25)',
           borderRadius: '8px',
@@ -165,7 +162,6 @@ export default function MobileCategoryPage() {
             {announcementTexts[announceText]}
           </span>
           
-          {/* ডট ইন্ডিকেটর */}
           <div style={{ display: 'flex', gap: '3px', position: 'absolute', right: '10px' }}>
             {announcementTexts.map((_, i) => (
               <div key={i} style={{
@@ -180,7 +176,7 @@ export default function MobileCategoryPage() {
         </div>
       </div>
 
-      {/* ===== মেইন কনটেন্ট: বাম ক্যাটাগরি + ডান প্রোডাক্ট ===== */}
+      {/* ===== মেইন কনটেন্ট ===== */}
       <div style={{ 
         display: 'flex', 
         flex: 1,
@@ -188,7 +184,6 @@ export default function MobileCategoryPage() {
         height: '100%',
       }}>
         
-        {/* বাম পাশের ক্যাটাগরি লিস্ট */}
         <div style={{ 
           width: '100px', 
           background: '#FFFFFF', 
@@ -222,7 +217,6 @@ export default function MobileCategoryPage() {
           })}
         </div>
 
-        {/* ডান পাশের ৩-কলাম প্রোডাক্ট গ্রিড */}
         <div style={{ 
           flex: 1, 
           padding: '12px 10px', 
@@ -273,5 +267,18 @@ export default function MobileCategoryPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Suspense wrapper — Next.js 16 প্রয়োজন
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div style={{ textAlign: 'center', padding: '50px', color: '#999', fontFamily: 'system-ui' }}>
+        ⏳ লোড হচ্ছে...
+      </div>
+    }>
+      <MobileCategoryPage />
+    </Suspense>
   );
 }
