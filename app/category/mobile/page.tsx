@@ -93,16 +93,24 @@ export default function MobileCategoryPage() {
   }, [activeCategory]);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'system-ui, sans-serif', paddingBottom: '80px' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: '#F4F6F8', 
+      fontFamily: 'system-ui, sans-serif', 
+      paddingBottom: '80px',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      overflow: 'hidden',
+    }}>
       
       {/* ===== প্রিমিয়াম হেডার ===== */}
       <div style={{
         background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`,
         padding: '10px 14px',
         color: 'white',
-        position: 'sticky',
-        top: 0,
         zIndex: 100,
+        flexShrink: 0,
       }}>
         {/* উপরের রো */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -163,7 +171,13 @@ export default function MobileCategoryPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      {/* ===== মেইন কনটেন্ট: বাম ক্যাটাগরি + ডান প্রোডাক্ট ===== */}
+      <div style={{ 
+        display: 'flex', 
+        flex: 1,
+        overflow: 'hidden',
+        height: '100%',
+      }}>
         
         {/* বাম পাশের ক্যাটাগরি লিস্ট */}
         <div style={{ 
@@ -172,6 +186,8 @@ export default function MobileCategoryPage() {
           overflowY: 'auto', 
           borderRight: '1px solid #EBEBEB',
           flexShrink: 0,
+          height: '100%',
+          WebkitOverflowScrolling: 'touch',
         }}>
           {categories.map((cat, i) => {
             const isActive = activeCategory === cat.slug;
@@ -198,7 +214,14 @@ export default function MobileCategoryPage() {
         </div>
 
         {/* ডান পাশের ৩-কলাম প্রোডাক্ট গ্রিড */}
-        <div style={{ flex: 1, padding: '12px 10px', overflowY: 'auto', background: '#fff' }}>
+        <div style={{ 
+          flex: 1, 
+          padding: '12px 10px', 
+          overflowY: 'auto', 
+          background: '#fff',
+          height: '100%',
+          WebkitOverflowScrolling: 'touch',
+        }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳ লোড হচ্ছে...</div>
           ) : products.length === 0 ? (
