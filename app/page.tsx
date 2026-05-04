@@ -20,19 +20,21 @@ const leftCategories = [
   { icon: '🚗', label: 'গাড়ি', slug: 'car' },
   { icon: '💼', label: 'চাকরি', slug: 'job' },
   { icon: '🔧', label: 'সার্ভিস', slug: 'service' },
-  { icon: '🏠', label: 'জমি / প্রপার্টি', slug: 'property' },
+  { icon: '🏠', label: 'জমি প্রপার্টি', slug: 'property' },
+  { icon: '📢', label: 'তথ্য', slug: 'info' },
 ];
 
 const rightCategories = [
-  { icon: '📢', label: 'তথ্য', slug: 'info' },
-  { icon: '💑', label: 'পাত্র-পাত্রী', slug: 'matrimony' },
-  { icon: '🔑', label: 'ভাড়া / রেন্ট', slug: 'rent' },
-  { icon: '🚑', label: 'জরুরি সেবা', slug: 'emergency' },
+  { icon: '💑', label: 'পাত্রপাত্রী', slug: 'matrimony' },
+  { icon: '🔑', label: 'ভাড়া রেন্ট', slug: 'rent' },
+  { icon: '🚑', label: 'জরুরি + মেডিসিন', slug: 'emergency' },
   { icon: '🐄', label: 'পশু', slug: 'animal' },
   { icon: '🍪', label: 'খাদ্য পণ্য', slug: 'food' },
-  { icon: '🛒', label: 'নিত্যপ্রয়োজনীয়', slug: 'daily-needs' },
+  { icon: '🌾', label: 'কৃষি', slug: 'agriculture' },
   { icon: '🎁', label: 'উপহার', slug: 'gifts' },
   { icon: '🔪', label: 'হস্তশিল্প', slug: 'handicraft' },
+  { icon: '🏚️', label: 'পুরাতন', slug: 'second-hand' },
+  { icon: '🏠', label: 'হোম সার্ভিস', slug: 'home-service' },
 ];
 
 export default function Home() {

@@ -23,9 +23,11 @@ const categoryMap: Record<string, { label: string; icon: string }> = {
   'emergency': { label: 'জরুরি সেবা', icon: '🚑' },
   'animal': { label: 'পশু', icon: '🐄' },
   'food': { label: 'খাদ্য পণ্য', icon: '🍪' },
-  'daily-needs': { label: 'নিত্যপ্রয়োজনীয়', icon: '🛒' },
+  'agriculture': { label: 'কৃষি', icon: '🌾' },
   'gifts': { label: 'উপহার', icon: '🎁' },
   'handicraft': { label: 'হস্তশিল্প', icon: '🔪' },
+  'second-hand': { label: 'পুরাতন', icon: '🏚️' },
+  'home-service': { label: 'হোম সার্ভিস', icon: '🏠' },
 };
 
 const allCategories = [
@@ -44,9 +46,11 @@ const allCategories = [
   { icon: '🚑', label: 'জরুরি সেবা', slug: 'emergency' },
   { icon: '🐄', label: 'পশু', slug: 'animal' },
   { icon: '🍪', label: 'খাদ্য পণ্য', slug: 'food' },
-  { icon: '🛒', label: 'নিত্যপ্রয়োজনীয়', slug: 'daily-needs' },
+  { icon: '🌾', label: 'কৃষি', slug: 'agriculture' },
   { icon: '🎁', label: 'উপহার', slug: 'gifts' },
   { icon: '🔪', label: 'হস্তশিল্প', slug: 'handicraft' },
+  { icon: '🏚️', label: 'পুরাতন', slug: 'second-hand' },
+  { icon: '🏠', label: 'হোম সার্ভিস', slug: 'home-service' },
 ];
 
 export default function CategoryPage() {

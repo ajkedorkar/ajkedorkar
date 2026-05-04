@@ -20,9 +20,11 @@ const categories = [
   { label: 'জরুরি', slug: 'emergency', icon: '🚑', color: '#FFF0F0', bgColor: '#FF0000' },
   { label: 'পশু', slug: 'animal', icon: '🐄', color: '#F0FFF5', bgColor: '#10B981' },
   { label: 'খাদ্য', slug: 'food', icon: '🍪', color: '#FFF8F0', bgColor: '#FFB347' },
-  { label: 'নিত্যপণ্য', slug: 'daily-needs', icon: '🛒', color: '#F8FFF0', bgColor: '#6366F1' },
+  { label: 'কৃষি', slug: 'agriculture', icon: '🌾', color: '#F0FFF5', bgColor: '#10B981' },
   { label: 'উপহার', slug: 'gifts', icon: '🎁', color: '#FFF5FF', bgColor: '#EC4899' },
   { label: 'হস্তশিল্প', slug: 'handicraft', icon: '🔪', color: '#FFF0E8', bgColor: '#D44800' },
+  { label: 'পুরাতন', slug: 'second-hand', icon: '🏚️', color: '#FFF5F0', bgColor: '#8B4513' },
+  { label: 'হোম সার্ভিস', slug: 'home-service', icon: '🏠', color: '#FFF8F0', bgColor: '#FF6B35' },
 ];
 
 const announcementTexts = [

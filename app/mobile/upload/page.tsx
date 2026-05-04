@@ -22,9 +22,11 @@ const categories = [
   { value: 'emergency', label: '🚑 জরুরি সেবা' },
   { value: 'animal', label: '🐄 পশু' },
   { value: 'food', label: '🍪 খাদ্য পণ্য' },
-  { value: 'daily-needs', label: '🛒 নিত্যপ্রয়োজনীয়' },
+  { value: 'agriculture', label: '🌾 কৃষি' },
   { value: 'gifts', label: '🎁 উপহার' },
   { value: 'handicraft', label: '🔪 হস্তশিল্প' },
+  { value: 'second-hand', label: '🏚️ পুরাতন' },
+  { value: 'home-service', label: '🏠 হোম সার্ভিস' },
 ];
 
 const guideTexts = [
