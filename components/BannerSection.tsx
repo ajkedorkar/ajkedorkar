@@ -15,15 +15,21 @@ const categorySlugMap: Record<string, string> = {
   'চাকরি': 'job',
   'সার্ভিস': 'service',
   'জমি / প্রপার্টি': 'property',
+  'জমি প্রপার্টি': 'property',
   'তথ্য': 'info',
   'পাত্র-পাত্রী': 'matrimony',
+  'পাত্রপাত্রী': 'matrimony',
   'ভাড়া / রেন্ট': 'rent',
+  'ভাড়া রেন্ট': 'rent',
   'জরুরি সেবা': 'emergency',
+  'জরুরি + মেডিসিন': 'emergency',
   'পশু': 'animal',
   'খাদ্য পণ্য': 'food',
-  'নিত্যপ্রয়োজনীয়': 'daily-needs',
+  'কৃষি': 'agriculture',
   'উপহার': 'gifts',
   'হস্তশিল্প': 'handicraft',
+  'পুরাতন': 'second-hand',
+  'হোম সার্ভিস': 'home-service',
 };
 
 interface Banner {
