@@ -6,6 +6,7 @@ import HeroBanner from './HeroBanner';
 
 const categorySlugMap: Record<string, string> = {
   'অফার জোন': 'offer-zone',
+  'ফোন': 'mobile',
   'মোবাইল': 'mobile',
   'কম্পিউটার': 'computer',
   'ইলেকট্রনিক্স': 'electronics',
@@ -66,7 +67,7 @@ export default function BannerSection({ banners }: BannerSectionProps) {
 
   return (
     <div style={{ flex: 1 }}>
-      {/* ব্যানার স্লাইডার (অ্যারো বাটন বাদ) */}
+      {/* ব্যানার স্লাইডার */}
       <div style={{ position: 'relative', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer' }} onClick={handleBannerClick}>
         <HeroBanner banners={displayBanners} currentBanner={currentBanner} />
       </div>
@@ -80,21 +81,6 @@ export default function BannerSection({ banners }: BannerSectionProps) {
           }} />
         ))}
       </div>
-
-      {/* টেক্সট বার */}
-      {displayBanners.length > 0 && (
-        <div onClick={handleBannerClick} style={{
-          background: `linear-gradient(90deg, ${displayBanners[currentBanner]?.color || '#e62e04'}, ${displayBanners[currentBanner]?.color || '#e62e04'}dd)`,
-          borderRadius: '0 0 8px 8px', padding: '10px 16px', textAlign: 'center', cursor: 'pointer',
-        }}>
-          <h3 style={{ color: 'white', fontSize: '16px', fontWeight: '800', margin: 0 }}>
-            {displayBanners[currentBanner]?.title || 'AjkeDorkar'}
-          </h3>
-          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', margin: '3px 0 0 0' }}>
-            {displayBanners[currentBanner]?.subtitle || 'Best Deals'} 🔥
-          </p>
-        </div>
-      )}
     </div>
   );
 }
