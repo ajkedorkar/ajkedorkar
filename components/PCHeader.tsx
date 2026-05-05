@@ -74,12 +74,18 @@ export default function PCHeader({ typingText, searchQuery, onSearchChange }: PC
             📤 Upload
           </button>
 
-          {/* ❤️ Wishlist (সাদা) */}
-          <span onClick={() => router.push('/account/wishlist')} style={{ cursor: 'pointer', color: 'white', fontSize: '20px' }}>❤️</span>
+          {/* ❤️ Wishlist — SVG সাদা হার্ট */}
+          <svg onClick={() => router.push('/account/wishlist')} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" style={{ cursor: 'pointer' }}>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
           
-          {/* 🛒 Cart (সাদা) */}
-          <span onClick={() => router.push('/cart')} style={{ cursor: 'pointer', position: 'relative', color: 'white', fontSize: '20px' }}>
-            🛒
+          {/* 🛒 Cart — SVG সাদা কার্ট */}
+          <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => router.push('/cart')}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
             {cartCount > 0 && (
               <span style={{
                 position: 'absolute', top: '-8px', right: '-8px',
@@ -88,7 +94,7 @@ export default function PCHeader({ typingText, searchQuery, onSearchChange }: PC
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>{cartCount}</span>
             )}
-          </span>
+          </div>
 
           {/* Login / Account (সাদা) */}
           {user ? (
