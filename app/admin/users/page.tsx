@@ -16,7 +16,7 @@ export default function UsersAdminPage() {
 
   async function loadUsers() {
     setLoading(true);
-    let query = supabase.from('admin_users_view').select('*').order('created_at', { ascending: false }).limit(100);
+    let query = supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100);
     if (searchTerm) query = query.or(`email.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`);
 
     const { data } = await query;

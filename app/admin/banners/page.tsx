@@ -31,6 +31,23 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function updateBanner(banner: Banner) {
+    await supabase.from('banners').update({
+      title: banner.title,
+      subtitle: banner.subtitle,
+      color: banner.color,
+      icon: banner.icon,
+      image_url: banner.image_url,
+      banner_height: banner.banner_height,
+      show_button: banner.show_button,
+      button_text: banner.button_text,
+    }).eq('id', banner.id);
+    
+    setEditing(null);
+    loadBanners();
+    alert('✅ ব্যানার আপডেট সফল!');
+  }
+
   async function handleImageUpload(file: File) {
     if (!file || !editing) return;
     setUploading(true);
@@ -47,34 +64,9 @@ export default function AdminPage() {
       setEditing({ ...editing, image_url: url });
       alert('✅ ইমেজ আপলোড সফল!');
     } else {
-      alert('❌ আপলোড ফেইল: ' + error?.message);
-    }
-    setUploading(false);
-  }
-
-  async function updateBanner(banner: Banner) {
-    const { error } = await supabase
-      .from('banners')
-      .update({
-        title: banner.title,
-        subtitle: banner.subtitle,
-        color: banner.color,
-        icon: banner.icon,
-        image_url: banner.image_url,
-        banner_height: banner.banner_height,
-        show_button: banner.show_button,
-        button_text: banner.button_text,
-        is_active: banner.is_active,
-      })
-      .eq('id', banner.id);
-    
-    if (!error) { 
-      setEditing(null); 
-      loadBanners(); 
-      alert('✅ ব্যানার আপডেট সফল!');
-    } else { 
       alert('❌ এরর: ' + error.message); 
     }
+    setUploading(false);
   }
 
   async function toggleActive(id: number, current: boolean) {
@@ -125,44 +117,46 @@ export default function AdminPage() {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={labelStyle}>📝 টাইটেল</label>
-                    <input value={editing.title} onChange={e => setEditing({...editing, title: e.target.value})} style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>📄 সাবটাইটেল</label>
-                    <input value={editing.subtitle} onChange={e => setEditing({...editing, subtitle: e.target.value})} style={inputStyle} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>🖼️ ইমেজ আপলোড</label>
-                  <input 
-                    type="file" accept="image/*"
-                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }}
-                    style={{ ...inputStyle, padding: '6px' }}
-                    disabled={uploading}
-                  />
-                  {uploading && <span style={{ fontSize: '11px', color: '#1a73e8' }}>⏳ আপলোড হচ্ছে...</span>}
-                  
-                  <div style={{ marginTop: '6px' }}>
-                    <label style={{ ...labelStyle, fontSize: '10px' }}>অথবা URL:</label>
+                    <label style={labelStyle}>📷 ইমেজ আপলোড</label>
                     <input 
-                      value={editing.image_url || ''} 
-                      onChange={e => setEditing({...editing, image_url: e.target.value})}
-                      style={inputStyle} 
+                      type="file" accept="image/*"
+                      onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }}
+                      style={{ ...inputStyle, padding: '6px' }}
+                      disabled={uploading}
                     />
+                    {uploading && <span style={{ fontSize: '11px', color: '#1a73e8' }}>⏳ আপলোড হচ্ছে...</span>}
+                    
+                    <div style={{ marginTop: '6px' }}>
+                      <label style={{ ...labelStyle, fontSize: '10px' }}>অথবা URL:</label>
+                      <input 
+                        value={editing.image_url || ''} 
+                        onChange={e => setEditing({...editing, image_url: e.target.value})}
+                        style={inputStyle} 
+                      />
+                    </div>
+
+                    {editing.image_url && (
+                      <div style={{ marginTop: '6px', position: 'relative' }}>
+                        <img src={editing.image_url} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '6px' }} alt="" />
+                        <button onClick={() => setEditing({...editing, image_url: ''})} style={{
+                          position: 'absolute', top: '4px', right: '4px',
+                          background: '#e62e04', color: 'white', border: 'none',
+                          width: '22px', height: '22px', borderRadius: '50%', cursor: 'pointer', fontSize: '12px',
+                        }}>✕</button>
+                      </div>
+                    )}
                   </div>
 
-                  {editing.image_url && (
-                    <div style={{ marginTop: '6px', position: 'relative' }}>
-                      <img src={editing.image_url} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '6px' }} alt="" />
-                      <button onClick={() => setEditing({...editing, image_url: ''})} style={{
-                        position: 'absolute', top: '4px', right: '4px',
-                        background: '#e62e04', color: 'white', border: 'none',
-                        width: '22px', height: '22px', borderRadius: '50%', cursor: 'pointer', fontSize: '12px',
-                      }}>✕</button>
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <div>
+                      <label style={labelStyle}>📝 টাইটেল</label>
+                      <input value={editing.title} onChange={e => setEditing({...editing, title: e.target.value})} style={inputStyle} />
                     </div>
-                  )}
+                    <div>
+                      <label style={labelStyle}>📄 সাবটাইটেল</label>
+                      <input value={editing.subtitle} onChange={e => setEditing({...editing, subtitle: e.target.value})} style={inputStyle} />
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
@@ -198,50 +192,47 @@ export default function AdminPage() {
 
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => updateBanner(editing)} style={saveBtn}>💾 সেভ</button>
-                  <button onClick={() => setEditing(null)} style={cancelBtn}>❌ বাতিল</button>
+                  <button onClick={() => setEditing(null)} style={cancelBtn}>❌ বাদ</button>
                 </div>
               </div>
             ) : (
               // ==================== ভিউ মোড ====================
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '200px' }}>
-                  <div style={{
-                    width: '120px', height: '70px', borderRadius: '6px', overflow: 'hidden',
-                    background: banner.image_url ? 'transparent' : banner.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '28px', color: 'white', flexShrink: 0, border: '1px solid #e0e0e0',
-                  }}>
-                    {banner.image_url ? (
-                      <img src={banner.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                    ) : banner.icon}
-                  </div>
-                  
-                  <div>
-                    <h3 style={{ margin: '0 0 2px 0', fontSize: '15px' }}>{banner.title}</h3>
-                    <p style={{ margin: '0 0 4px 0', color: '#666', fontSize: '11px' }}>{banner.subtitle}</p>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                      <span style={tagStyle}>📏 {banner.banner_height}px</span>
-                      {banner.image_url && <span style={tagStyle}>🖼️</span>}
-                      {banner.show_button && <span style={tagStyle}>🔘 {banner.button_text}</span>}
-                      <span style={{
-                        padding: '2px 8px', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold',
-                        background: banner.is_active ? '#e6f4ea' : '#fce8e6',
-                        color: banner.is_active ? '#00a651' : '#e62e04',
-                      }}>
-                        {banner.is_active ? 'Active' : 'Inactive'}
-                      </span>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
+                    {banner.image_url && (
+                      <img src={banner.image_url} style={{ width: '70px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} alt="" />
+                    )}
+                    <div>
+                      <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#222' }}>
+                        {banner.icon} {banner.title}
+                      </p>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#666' }}>{banner.subtitle}</p>
+                      <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                        <span style={tagStyle}>🎨 {banner.color}</span>
+                        <span style={tagStyle}>📏 {banner.banner_height}px</span>
+                        {banner.image_url && <span style={tagStyle}>🖼️</span>}
+                        {banner.show_button && <span style={tagStyle}>🔘 {banner.button_text}</span>}
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold',
+                          background: banner.is_active ? '#e6f4ea' : '#fce8e6',
+                          color: banner.is_active ? '#00a651' : '#e62e04',
+                        }}>
+                          {banner.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
                   <button onClick={() => toggleActive(banner.id, banner.is_active)} style={{
                     background: banner.is_active ? '#fce8e6' : '#e6f4ea',
                     color: banner.is_active ? '#e62e04' : '#00a651',
                     border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', 
                     fontWeight: '600', fontSize: '10px', whiteSpace: 'nowrap',
                   }}>
-                    {banner.is_active ? '⏸ নিষ্ক্রিয়' : '▶ সক্রিয়'}
+                    {banner.is_active ? '⏸ নিষ্ক্রিয়' : '▶ সক্রিয়'}
                   </button>
                   <button onClick={() => setEditing(banner)} style={editBtn}>✏️ এডিট</button>
                 </div>
