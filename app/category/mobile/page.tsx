@@ -3,8 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import OfferZoneTheme from '@/components/category-themes/offer-zone';
-import MobileTheme from '@/components/category-themes/mobile';
+
 const categories = [
   { label: 'অফার জোন', slug: 'offer-zone', icon: '🎯', color: '#FFF0F0', bgColor: '#FF416C' },
   { label: 'ফোন', slug: 'mobile', icon: '📱', color: '#F0F5FF', bgColor: '#1a73e8' },
@@ -42,12 +41,7 @@ function MobileCategoryPage() {
   const themeSlug = searchParams.get('theme');
 
   // 🚀 থিম চেক — offer-zone হলে নতুন থিম দেখাবে
-  if (themeSlug === 'offer-zone') {
-    return <OfferZoneTheme />;
-  }
-if (themeSlug === 'mobile') {
-  return <MobileTheme />;
-}
+  
   const [activeCategory, setActiveCategory] = useState('offer-zone');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

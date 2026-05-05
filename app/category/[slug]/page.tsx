@@ -5,8 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import PCHeader from '@/components/PCHeader';
 import MobileHeader from '@/components/MobileHeader';
-import OfferZoneTheme from '@/components/category-themes/offer-zone';
-import MobileTheme from '@/components/category-themes/mobile';
+
 const categoryMap: Record<string, { label: string; icon: string }> = {
   'offer-zone': { label: 'অফার জোন', icon: '🎯' },
   'mobile': { label: 'ফোন', icon: '📱' },
@@ -64,13 +63,7 @@ export default function CategoryPage() {
   const [typingText, setTypingText] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // 🚀 অফার জোন থিম চেক — আগে বসাতে হবে সবকিছুর আগে!
-  if (slug === 'offer-zone') {
-    return <OfferZoneTheme />;
-  }
-if (slug === 'mobile') {
-  return <MobileTheme />;
-}
+  
   // সার্চ বারের টাইপিং অ্যানিমেশনের জন্য
   useEffect(() => {
     let i = 0, isDeleting = false;
