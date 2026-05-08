@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { compressImage, getWebPUrl } from '@/lib/imageCompress'; // ✅ যোগ করুন
 
 interface Banner {
   id: number;
@@ -48,25 +49,36 @@ export default function AdminPage() {
     alert('✅ ব্যানার আপডেট সফল!');
   }
 
+  // ✅ সুপার সনিক ইমেজ আপলোড (WebP)
   async function handleImageUpload(file: File) {
     if (!file || !editing) return;
     setUploading(true);
     
-    const fileExt = file.name.split('.').pop();
-    const fileName = `banner_${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
-    
-    const { data, error } = await supabase.storage
-      .from('banners')
-      .upload(fileName, file);
+    try {
+      // ✅ WebP তে কনভার্ট (max 50KB)
+      const compressed = await compressImage(file, 50);
+      const fileName = `banner_${Date.now()}_${Math.random().toString(36).slice(2)}.webp`;
+      
+      const { data, error } = await supabase.storage
+        .from('banners')
+        .upload(fileName, compressed, {
+          contentType: 'image/webp',
+          cacheControl: '3600',
+          upsert: true
+        });
 
-    if (!error && data) {
-      const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
-      setEditing({ ...editing, image_url: url });
-      alert('✅ ইমেজ আপলোড সফল!');
-    } else {
-      alert('❌ এরর: ' + error.message); 
+      if (!error && data) {
+        const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
+        setEditing({ ...editing, image_url: url });
+        alert('✅ ইমেজ আপলোড সফল! (WebP ফরম্যাটে)');
+      } else {
+        alert('❌ এরর: ' + error?.message);
+      }
+    } catch (error) {
+      alert('❌ আপলোড ব্যর্থ!');
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function toggleActive(id: number, current: boolean) {
@@ -117,7 +129,7 @@ export default function AdminPage() {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <label style={labelStyle}>📷 ইমেজ আপলোড</label>
+                    <label style={labelStyle}>📷 ইমেজ আপলোড (WebP)</label>
                     <input 
                       type="file" accept="image/*"
                       onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }}
@@ -137,7 +149,13 @@ export default function AdminPage() {
 
                     {editing.image_url && (
                       <div style={{ marginTop: '6px', position: 'relative' }}>
-                        <img src={editing.image_url} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '6px' }} alt="" />
+                        {/* ✅ WebP ইমেজ প্রিভিউ */}
+                        <img 
+                          src={getWebPUrl(editing.image_url, 400)} 
+                          style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '6px' }} 
+                          alt=""
+                          loading="lazy"
+                        />
                         <button onClick={() => setEditing({...editing, image_url: ''})} style={{
                           position: 'absolute', top: '4px', right: '4px',
                           background: '#e62e04', color: 'white', border: 'none',
@@ -201,7 +219,13 @@ export default function AdminPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px' }}>
                   <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
                     {banner.image_url && (
-                      <img src={banner.image_url} style={{ width: '70px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} alt="" />
+                      // ✅ WebP ইমেজ প্রিভিউ
+                      <img 
+                        src={getWebPUrl(banner.image_url, 100)} 
+                        style={{ width: '70px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} 
+                        alt=""
+                        loading="lazy"
+                      />
                     )}
                     <div>
                       <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#222' }}>
@@ -211,7 +235,7 @@ export default function AdminPage() {
                       <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
                         <span style={tagStyle}>🎨 {banner.color}</span>
                         <span style={tagStyle}>📏 {banner.banner_height}px</span>
-                        {banner.image_url && <span style={tagStyle}>🖼️</span>}
+                        {banner.image_url && <span style={tagStyle}>🖼️ WebP</span>}
                         {banner.show_button && <span style={tagStyle}>🔘 {banner.button_text}</span>}
                         <span style={{
                           padding: '2px 8px', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold',

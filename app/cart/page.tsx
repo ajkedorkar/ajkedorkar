@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { getWebPUrl } from '@/lib/imageCompress'; // ✅ যোগ করুন
 
 export default function CartPage() {
   const router = useRouter();
@@ -159,8 +160,13 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <img src={item.products?.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200'}
-                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} alt="" />
+                {/* ✅ WebP ইমেজ যোগ করা হয়েছে */}
+                <img 
+                  src={getWebPUrl(item.products?.webp_url || item.products?.image_url, 100)} 
+                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} 
+                  alt="" 
+                  loading="lazy"
+                />
 
                 <div style={{ flex: 1 }}>
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '600', color: '#333' }}>
@@ -241,8 +247,8 @@ export default function CartPage() {
             </div>
             <button 
               onClick={() => {
-  if (selectedItems.length === 0) return alert('কমপক্ষে একটি আইটেম সিলেক্ট করুন!');
-  router.push('/checkout');
+                if (selectedItems.length === 0) return alert('কমপক্ষে একটি আইটেম সিলেক্ট করুন!');
+                router.push('/checkout');
               }}
               disabled={selectedItems.length === 0}
               style={{

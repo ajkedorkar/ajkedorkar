@@ -55,6 +55,14 @@ export default function ProductAdminPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
   const [stats, setStats] = useState({ total: 0, pending: 0, premium: 0 });
+  const [uploading, setUploading] = useState(false);
+  const [replaceUploading, setReplaceUploading] = useState<number | null>(null);
+  
+  // ✅ Pagination State
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const LIMIT = 20;
 
   const emptyForm = {
     title: '', price: '', old_price: '', discount: '', category: 'offer-zone',
@@ -62,47 +70,105 @@ export default function ProductAdminPage() {
   };
   const [form, setForm] = useState({...emptyForm});
 
-  useEffect(() => { loadProducts(); }, [filterCategory, filterStatus]);
+  useEffect(() => { loadProducts(true); }, [filterCategory, filterStatus, searchTerm]);
 
-  async function loadProducts() {
+  async function loadProducts(resetPage: boolean = true) {
+    if (resetPage) {
+      setPage(1);
+      setProducts([]);
+    }
+    
     setLoading(true);
-    let query = supabase.from('products').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100);
-    if (filterCategory !== 'all') query = query.eq('category', filterCategory);
-    if (filterStatus === 'pending') query = query.eq('status', 'pending');
-    if (filterStatus === 'approved') query = query.eq('status', 'approved');
-    if (filterStatus === 'premium') query = query.eq('is_premium', true);
-    if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
-    const { data } = await query;
-    if (data) setProducts(data);
-    const { data: all } = await supabase.from('products').select('status, is_premium');
-    if (all) setStats({ total: all.length, pending: all.filter(p => p.status === 'pending').length, premium: all.filter(p => p.is_premium).length });
-    setLoading(false);
+    
+    const currentPage = resetPage ? 1 : page;
+    const start = (currentPage - 1) * LIMIT;
+    const end = start + LIMIT - 1;
+    
+    try {
+      let query = supabase
+        .from('products')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(start, end);
+        
+      if (filterCategory !== 'all') query = query.eq('category', filterCategory);
+      if (filterStatus === 'pending') query = query.eq('status', 'pending');
+      if (filterStatus === 'approved') query = query.eq('status', 'approved');
+      if (filterStatus === 'premium') query = query.eq('is_premium', true);
+      if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
+      
+      const { data, count } = await query;
+      
+      if (data) {
+        if (resetPage) {
+          setProducts(data);
+        } else {
+          setProducts(prev => [...prev, ...data]);
+        }
+        setTotalCount(count || 0);
+        setHasMore((count || 0) > end + 1);
+      }
+      
+      // স্ট্যাটস লোড
+      const { data: all } = await supabase.from('products').select('status, is_premium');
+      if (all) setStats({ total: all.length, pending: all.filter(p => p.status === 'pending').length, premium: all.filter(p => p.is_premium).length });
+      
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setLoading(false);
+    }
   }
+
+  // ✅ লোড মোর ফাংশন
+  const loadMore = async () => {
+    if (loading || !hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    await loadProducts(false);
+  };
 
   async function updateStatus(id: number, status: string) {
     await supabase.from('products').update({ status }).eq('id', id);
-    loadProducts();
+    loadProducts(true);
   }
 
   async function handleReplaceImage(id: number, file: File) {
-    const compressed = await compressImage(file, 30);
-    const fileName = `product_${id}_${Date.now()}.webp`;
-    const { data } = await supabase.storage.from('banners').upload(fileName, compressed, { contentType: 'image/webp', upsert: true });
-    if (data) {
-      const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
-      await supabase.from('products').update({ image_url: url, webp_url: url }).eq('id', id);
-      loadProducts();
-      alert('✅ ইমেজ রিপ্লেস হয়েছে!');
+    if (replaceUploading === id) return;
+    setReplaceUploading(id);
+    try {
+      const compressed = await compressImage(file, 30);
+      const fileName = `product_${id}_${Date.now()}.webp`;
+      const { data } = await supabase.storage.from('banners').upload(fileName, compressed, { contentType: 'image/webp', upsert: true });
+      if (data) {
+        const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
+        await supabase.from('products').update({ image_url: url, webp_url: url }).eq('id', id);
+        loadProducts(true);
+        alert('✅ ইমেজ রিপ্লেস হয়েছে!');
+      }
+    } catch (error) {
+      alert('❌ ইমেজ রিপ্লেস ব্যর্থ!');
+    } finally {
+      setReplaceUploading(null);
     }
   }
 
   async function handleImageUpload(file: File) {
-    const compressed = await compressImage(file, 30);
-    const fileName = `product_${Date.now()}.webp`;
-    const { data } = await supabase.storage.from('banners').upload(fileName, compressed, { contentType: 'image/webp', upsert: true });
-    if (data) {
-      const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
-      setForm(prev => ({ ...prev, image_url: url, webp_url: url }));
+    if (uploading) return;
+    setUploading(true);
+    try {
+      const compressed = await compressImage(file, 30);
+      const fileName = `product_${Date.now()}.webp`;
+      const { data } = await supabase.storage.from('banners').upload(fileName, compressed, { contentType: 'image/webp', upsert: true });
+      if (data) {
+        const url = `https://zypshsruibnbefixknxm.supabase.co/storage/v1/object/public/banners/${fileName}`;
+        setForm(prev => ({ ...prev, image_url: url, webp_url: url }));
+        alert('✅ ইমেজ আপলোড হয়েছে!');
+      }
+    } catch (error) {
+      alert('❌ ইমেজ আপলোড ব্যর্থ!');
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -125,13 +191,13 @@ export default function ProductAdminPage() {
       await supabase.from('products').insert({...data, sold: 0, is_active: true, status: 'approved'});
       alert('✅ নতুন প্রোডাক্ট যোগ হয়েছে!');
     }
-    setForm({...emptyForm}); setShowForm(false); setEditingId(null); loadProducts();
+    setForm({...emptyForm}); setShowForm(false); setEditingId(null); loadProducts(true);
   }
 
   async function deleteProduct(id: number) {
     if (!confirm('ডিলিট করবেন?')) return;
     await supabase.from('products').delete().eq('id', id);
-    loadProducts();
+    loadProducts(true);
   }
 
   function editProduct(p: Product) {
@@ -169,7 +235,7 @@ export default function ProductAdminPage() {
 
       {/* ফিল্টার বার */}
       <div style={{ background: 'white', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap', border: '1px solid #e8eaed' }}>
-        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadProducts()} placeholder="🔍 সার্চ..." style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '13px', minWidth: '150px' }} />
+        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadProducts(true)} placeholder="🔍 সার্চ..." style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '13px', minWidth: '150px' }} />
         <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={sel}>
           <option value="all">📂 সব</option>
           {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
@@ -211,7 +277,8 @@ export default function ProductAdminPage() {
             <div><label style={lbl}>📱 সেলার ফোন</label><input value={form.seller_phone} onChange={e => setForm({...form, seller_phone: e.target.value})} style={inp} /></div>
             <div>
               <label style={lbl}>🖼️ ইমেজ</label>
-              <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} style={{ fontSize: '12px' }} />
+              <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} disabled={uploading} style={{ fontSize: '12px' }} />
+              {uploading && <span style={{ fontSize: '11px', color: '#e62e04', marginLeft: '8px' }}>⏳ আপলোড হচ্ছে...</span>}
               {form.image_url && <img src={form.webp_url || form.image_url} style={{ maxWidth: '120px', maxHeight: '120px', borderRadius: '8px', marginTop: '8px', border: '2px solid #e0e0e0' }} alt="" />}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -225,41 +292,77 @@ export default function ProductAdminPage() {
       )}
 
       {/* প্রোডাক্ট লিস্ট */}
-      {loading ? <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳</div> : products.length === 0 ? (
+      {loading && products.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳ লোড হচ্ছে...</div>
+      ) : products.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '12px', color: '#999' }}>📭 কিছু নেই</div>
       ) : (
-        <div style={{ display: 'grid', gap: '10px' }}>
-          {products.map(p => (
-            <div key={p.id} style={{
-              background: 'white', borderRadius: '10px', padding: '14px 16px', border: '1px solid #e8eaed',
-              display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between',
-              borderLeft: p.status === 'pending' ? '4px solid #FFB347' : p.is_premium ? '4px solid #1a1a2e' : '4px solid transparent',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '250px' }}>
-                <img src={p.webp_url || p.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'} 
-                  style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #f0f0f0' }} alt="" />
-                <div>
-                  <strong style={{ fontSize: '14px', color: '#1a1a2e' }}>{p.title}</strong>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', color: '#1a73e8', fontWeight: '700' }}>৳{p.price?.toLocaleString()}</span>
-                    <span style={{ fontSize: '10px', background: '#f0f0f0', padding: '2px 8px', borderRadius: '10px' }}>{categories.find(c => c.value === p.category)?.label || p.category}</span>
-                    {p.status === 'pending' && <span style={{ fontSize: '10px', background: '#FFF3E0', color: '#E65100', padding: '2px 8px', borderRadius: '10px' }}>⏳ পেন্ডিং</span>}
-                    {p.is_premium && <span style={{ fontSize: '10px', background: '#1a1a2e', color: '#FFB347', padding: '2px 8px', borderRadius: '10px' }}>👑 প্রিমিয়াম</span>}
+        <>
+          <div style={{ display: 'grid', gap: '10px' }}>
+            {products.map(p => (
+              <div key={p.id} style={{
+                background: 'white', borderRadius: '10px', padding: '14px 16px', border: '1px solid #e8eaed',
+                display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between',
+                borderLeft: p.status === 'pending' ? '4px solid #FFB347' : p.is_premium ? '4px solid #1a1a2e' : '4px solid transparent',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '250px' }}>
+                  <img src={p.webp_url || p.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'} 
+                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #f0f0f0' }} alt="" />
+                  <div>
+                    <strong style={{ fontSize: '14px', color: '#1a1a2e' }}>{p.title}</strong>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', color: '#1a73e8', fontWeight: '700' }}>৳{p.price?.toLocaleString()}</span>
+                      <span style={{ fontSize: '10px', background: '#f0f0f0', padding: '2px 8px', borderRadius: '10px' }}>{categories.find(c => c.value === p.category)?.label || p.category}</span>
+                      {p.status === 'pending' && <span style={{ fontSize: '10px', background: '#FFF3E0', color: '#E65100', padding: '2px 8px', borderRadius: '10px' }}>⏳ পেন্ডিং</span>}
+                      {p.is_premium && <span style={{ fontSize: '10px', background: '#1a1a2e', color: '#FFB347', padding: '2px 8px', borderRadius: '10px' }}>👑 প্রিমিয়াম</span>}
+                    </div>
                   </div>
                 </div>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {p.image_url && <a href={p.image_url} download target="_blank" style={{ background: '#e8f0fe', color: '#1a73e8', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', textDecoration: 'none', whiteSpace: 'nowrap' }}>📥</a>}
+                  <label style={{ background: '#f0f0f0', color: '#666', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {replaceUploading === p.id ? '⏳' : '📤'}
+                    <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleReplaceImage(p.id, f); }} style={{ display: 'none' }} />
+                  </label>
+                  {p.status === 'pending' && <button onClick={() => updateStatus(p.id, 'approved')} style={{ background: '#e6f4ea', color: '#00a651', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>✅</button>}
+                  {p.status === 'pending' && <button onClick={() => updateStatus(p.id, 'rejected')} style={{ background: '#fce8e6', color: '#e62e04', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>❌</button>}
+                  <button onClick={() => setPreviewProduct(p)} style={{ background: '#f0f0f0', color: '#666', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>👁️</button>
+                  <button onClick={() => editProduct(p)} style={{ background: '#e8f0fe', color: '#1a73e8', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>✏️</button>
+                  <button onClick={() => deleteProduct(p.id)} style={{ background: '#fce8e6', color: '#e62e04', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>🗑️</button>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {p.image_url && <a href={p.image_url} download target="_blank" style={{ background: '#e8f0fe', color: '#1a73e8', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', textDecoration: 'none', whiteSpace: 'nowrap' }}>📥</a>}
-                <label style={{ background: '#f0f0f0', color: '#666', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>📤<input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleReplaceImage(p.id, f); }} style={{ display: 'none' }} /></label>
-                {p.status === 'pending' && <button onClick={() => updateStatus(p.id, 'approved')} style={{ background: '#e6f4ea', color: '#00a651', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>✅</button>}
-                {p.status === 'pending' && <button onClick={() => updateStatus(p.id, 'rejected')} style={{ background: '#fce8e6', color: '#e62e04', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>❌</button>}
-                <button onClick={() => setPreviewProduct(p)} style={{ background: '#f0f0f0', color: '#666', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>👁️</button>
-                <button onClick={() => editProduct(p)} style={{ background: '#e8f0fe', color: '#1a73e8', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>✏️</button>
-                <button onClick={() => deleteProduct(p.id)} style={{ background: '#fce8e6', color: '#e62e04', border: 'none', padding: '6px 10px', borderRadius: '6px', fontWeight: '600', fontSize: '10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>🗑️</button>
-              </div>
+            ))}
+          </div>
+          
+          {/* ✅ লোড মোর বাটন */}
+          {hasMore && (
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <button 
+                onClick={loadMore} 
+                disabled={loading}
+                style={{
+                  background: loading ? '#ccc' : '#e62e04',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 30px',
+                  borderRadius: '8px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '13px'
+                }}
+              >
+                {loading ? '⏳ লোড হচ্ছে...' : `আরও দেখুন + (${totalCount - products.length} বাকি)`}
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+          
+          {/* ✅ সব লোড হয়ে গেলে */}
+          {!hasMore && products.length > 0 && (
+            <div style={{ textAlign: 'center', marginTop: '20px', color: '#00a651', fontSize: '12px' }}>
+              ✅ সব {totalCount}টি প্রোডাক্ট দেখানো হয়েছে
+            </div>
+          )}
+        </>
       )}
 
       {/* প্রিভিউ মোডাল */}

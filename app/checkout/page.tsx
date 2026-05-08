@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { getWebPUrl } from '@/lib/imageCompress'; // ✅ যোগ করুন
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -202,8 +203,13 @@ export default function CheckoutPage() {
           <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '12px' }}>
             {cartItems.map((item: any) => (
               <div key={item.id} style={{ display: 'flex', gap: '10px', padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
-                <img src={item.products?.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'} 
-                  style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} alt="" />
+                {/* ✅ WebP ইমেজ যোগ করা হয়েছে */}
+                <img 
+                  src={getWebPUrl(item.products?.webp_url || item.products?.image_url, 100)} 
+                  style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} 
+                  alt="" 
+                  loading="lazy"
+                />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 2px 0' }}>{item.products?.title}</p>
                   <span style={{ fontSize: '11px', color: '#999' }}>x{item.quantity}</span>

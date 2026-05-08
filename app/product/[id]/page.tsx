@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { compressImage } from '@/lib/imageCompress';
+import { compressImage, getWebPUrl } from '@/lib/imageCompress';
 import PCHeader from '@/components/PCHeader';
 
 interface Product {
@@ -158,12 +158,12 @@ export default function ProductDetailPage() {
                 onMouseLeave={() => setIsHovering(false)}
                 onMouseMove={handleMouseMove}
                 onClick={() => setZoomImage(mainImage)}>
-                <img src={mainImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'} alt={product.title} />
+                <img src={getWebPUrl(mainImage, 600) || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'} alt={product.title} />
                 
                 {/* আমাজন স্টাইল জুম: লেন্স + রেজাল্ট */}
                 <div className="zoom-lens" />
                 <div className="zoom-result" style={{
-                  backgroundImage: `url(${mainImage})`,
+                  backgroundImage: `url(${getWebPUrl(mainImage, 800)})`,
                   backgroundSize: '250%',
                   backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
                 }} />
@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
                 <div className="thumb-row">
                   {allImages.map((img, i) => (
                     <div key={i} onClick={() => setSelectedImage(i)} className={`thumb ${selectedImage === i ? 'active' : ''}`}>
-                      <img src={zoomImage || ''} alt="" />
+                      <img src={getWebPUrl(img, 100)} alt="" />
                     </div>
                   ))}
                 </div>
@@ -239,7 +239,7 @@ export default function ProductDetailPage() {
             <div className="related-grid">
               {related.slice(0, 8).map((r, i) => (
                 <div key={i} onClick={() => router.push(`/product/${r.id}`)} className="related-card">
-                  <img src={r.webp_url || r.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300'} alt="" />
+                  <img src={getWebPUrl(r.webp_url || r.image_url, 300) || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300'} alt="" />
                   <div style={{ padding: '10px' }}><p>{r.title}</p><span>৳{(r.price ?? 0).toLocaleString()}</span></div>
                 </div>
               ))}
@@ -258,7 +258,7 @@ export default function ProductDetailPage() {
       {zoomImage && (
         <div className="zoom-modal" onClick={() => setZoomImage(null)}>
           <span onClick={() => setZoomImage(null)}>✕</span>
-          <img src={zoomImage || ''} alt="" />
+          <img src={getWebPUrl(zoomImage, 1200) || ''} alt="" />
         </div>
       )}
 
@@ -360,7 +360,7 @@ function ReviewSection({ productId }: { productId: number }) {
           <div style={{ display: 'flex', gap: '4px', margin: '8px 0' }}>{[1,2,3,4,5].map(s => <span key={s} onClick={() => setReviewForm({...reviewForm, rating: s})} style={{ fontSize: '22px', cursor: 'pointer', opacity: s <= reviewForm.rating ? 1 : 0.3 }}>⭐</span>)}</div>
           <textarea value={reviewForm.comment} onChange={e => setReviewForm({...reviewForm, comment: e.target.value})} placeholder="মন্তব্য..." style={{...rInp, height: '60px'}} />
           <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleReviewImage(f); }} style={{ marginTop: '6px', fontSize: '11px' }} />
-          {reviewForm.image_url && <img src={reviewForm.webp_url || reviewForm.image_url} onClick={() => setZoomImage(reviewForm.webp_url || reviewForm.image_url)} style={{ maxWidth: '60px', maxHeight: '60px', borderRadius: '4px', marginTop: '6px', cursor: 'zoom-in' }} />}
+          {reviewForm.image_url && <img src={getWebPUrl(reviewForm.webp_url || reviewForm.image_url, 100)} onClick={() => setZoomImage(reviewForm.webp_url || reviewForm.image_url)} style={{ maxWidth: '60px', maxHeight: '60px', borderRadius: '4px', marginTop: '6px', cursor: 'zoom-in' }} />}
           <button onClick={submitReview} style={{ marginTop: '8px', background: '#e62e04', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>💾 জমা</button>
         </div>
       )}
@@ -368,10 +368,10 @@ function ReviewSection({ productId }: { productId: number }) {
         <div key={r.id} style={{ padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: '600', fontSize: '13px' }}>{r.user_name}</span><span style={{ fontSize: '11px', color: '#F59E0B' }}>{'⭐'.repeat(r.rating ?? 0)}</span></div>
           <p style={{ fontSize: '12px', color: '#666', margin: '3px 0' }}>{r.comment}</p>
-          {r.image_url && <img src={r.webp_url || r.image_url} onClick={() => setZoomImage(r.webp_url || r.image_url)} style={{ maxWidth: '50px', maxHeight: '50px', borderRadius: '4px', cursor: 'zoom-in' }} />}
+          {r.image_url && <img src={getWebPUrl(r.webp_url || r.image_url, 100)} onClick={() => setZoomImage(r.webp_url || r.image_url)} style={{ maxWidth: '50px', maxHeight: '50px', borderRadius: '4px', cursor: 'zoom-in' }} />}
         </div>
       ))}
-      {zoomImage && <div onClick={() => setZoomImage(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '20px' }}><span onClick={() => setZoomImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '36px' }}>✕</span><img src={zoomImage || ''} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '8px' }} /></div>}
+      {zoomImage && <div onClick={() => setZoomImage(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', padding: '20px' }}><span onClick={() => setZoomImage(null)} style={{ position: 'absolute', top: '20px', right: '30px', color: 'white', fontSize: '36px' }}>✕</span><img src={getWebPUrl(zoomImage, 1200) || ''} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '8px' }} /></div>}
     </div>
   );
 }
