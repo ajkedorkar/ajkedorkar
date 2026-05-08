@@ -9,7 +9,6 @@ export default function MobileNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
 
-  // ২০টি ক্যাটাগরি আইকন (Category বাটনের জন্য)
   const allCategories = [
     { icon: '🎯', slug: 'offer' }, { icon: '📱', slug: 'mobile' },
     { icon: '💻', slug: 'laptop' }, { icon: '⚡', slug: 'gadget' },
@@ -23,7 +22,6 @@ export default function MobileNav() {
     { icon: '🏚️', slug: 'old' }, { icon: '🛠️', slug: 'home' },
   ];
 
-  // মাঝখানের বাটনের জন্য প্রোডাক্ট আইকন
   const productIcons = ['🛍️', '📦', '🛒', '🏷️', '💰', '👕', '👞', '📺'];
 
   useEffect(() => {
@@ -38,12 +36,12 @@ export default function MobileNav() {
     <div className="mobile-nav-premium">
       <div className="nav-content">
         
-        {/* Home */}
+        {/* হোম বাটন */}
         <div className="nav-item" onClick={() => router.push('/')}>
           <div className={`icon-only ${pathname === '/' ? 'active' : ''}`}>🏠</div>
         </div>
 
-        {/* ১. Category বাটন (অ্যানিমেটেড ২০টি আইকন) */}
+        {/* ১. Category বাটন */}
         <div className="nav-item" onClick={() => router.push('/category/mobile')}>
           <div className="animated-box orange-border">
             <div className="track slide-slow">
@@ -54,7 +52,7 @@ export default function MobileNav() {
           </div>
         </div>
 
-        {/* ২. মাঝখানের বাটন (প্রোডাক্ট আইকন) */}
+        {/* ২. মাঝখানের প্রোডাক্ট বাটন */}
         <div className="nav-item">
           <div className="animated-box gray-border">
             <div className="track slide-fast">
@@ -65,7 +63,7 @@ export default function MobileNav() {
           </div>
         </div>
 
-        {/* ৩. Upload বাটন (এডজাস্ট করা সাইজ) */}
+        {/* ৩. প্রোমো/আপলোড বাটন */}
         <div className="nav-item" onClick={() => router.push('/mobile/upload')}>
           <div className="animated-box red-border">
             <div className="track text-slide">
@@ -75,9 +73,14 @@ export default function MobileNav() {
           </div>
         </div>
 
-        {/* Account */}
+        {/* ৪. অ্যানিমেটেড অ্যাকাউন্ট বাটন (New Concept) */}
         <div className="nav-item" onClick={() => router.push(user ? '/account' : '/auth/login')}>
-          <div className={`icon-only ${pathname.includes('account') ? 'active' : ''}`}>👤</div>
+          <div className={`animated-box ${pathname.includes('account') ? 'active-acc-box' : 'blue-border'}`}>
+            <div className="track text-slide-account">
+              <span className="account-text">👤 পণ্য কিনতে হলে Login করুন — </span>
+              <span className="account-text">👤 পণ্য কিনতে হলে Login করুন — </span>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -107,7 +110,6 @@ export default function MobileNav() {
           cursor: pointer;
         }
         
-        /* সব বাটন এখন একদম সেম সাইজ (62px) */
         .animated-box {
           width: 62px; 
           height: 32px;
@@ -117,18 +119,29 @@ export default function MobileNav() {
           align-items: center;
           position: relative;
           border: 1.5px solid transparent;
+          transition: all 0.3s ease;
         }
         
         .orange-border { background: #fff5f0; border-color: #ff4d00; }
         .red-border { background: #fef2f2; border-color: #ef4444; }
         .gray-border { background: #f9fafb; border-color: #94a3b8; }
+        .blue-border { background: #f0f7ff; border-color: #3b82f6; }
+
+        /* এক্টিভ অবস্থায় অ্যাকাউন্ট বক্সের স্পেশাল লুক */
+        .active-acc-box {
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          border-color: transparent;
+          box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+        .active-acc-box .account-text { color: white; }
 
         .track { display: flex; white-space: nowrap; align-items: center; }
         
-        /* অ্যানিমেশনগুলো */
+        /* অ্যানিমেশন স্পিড কন্ট্রোল */
         .slide-slow { gap: 18px; padding: 0 10px; animation: slideAll 25s linear infinite; }
         .slide-fast { gap: 15px; padding: 0 10px; animation: slideAll 15s linear infinite; }
         .text-slide { animation: slideAll 12s linear infinite; }
+        .text-slide-account { animation: slideAll 10s linear infinite; }
 
         @keyframes slideAll {
           0% { transform: translateX(0); }
@@ -136,11 +149,20 @@ export default function MobileNav() {
         }
 
         .slide-item { font-size: 18px; flex-shrink: 0; }
+        
         .promo-text { 
           font-size: 8px; 
           font-weight: 800; 
           color: #dc2626; 
           padding-right: 20px; 
+          white-space: nowrap;
+        }
+
+        .account-text {
+          font-size: 8px;
+          font-weight: 800;
+          color: #2563eb;
+          padding-right: 20px;
           white-space: nowrap;
         }
 
