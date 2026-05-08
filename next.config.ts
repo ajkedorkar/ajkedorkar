@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["10.43.113.225", "localhost"],
+  // experimental এর ভেতর থেকে বের করে সরাসরি এখানে দিন
+  allowedDevOrigins: ["10.220.15.225", "localhost"], 
+  
   transpilePackages: ['tailwindcss'],
   trailingSlash: false,
   skipTrailingSlashRedirect: true,
