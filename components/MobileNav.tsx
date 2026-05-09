@@ -28,17 +28,30 @@ export default function MobileNav() {
     async function load() {
       const { data } = await supabase.auth.getSession();
       setUser(data.session?.user || null);
+
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user || null);
+      });
+
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
     }
     load();
   }, []);
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'ইউজার';
 
   return (
     <div className="mobile-nav-premium">
       <div className="nav-content">
         
-        {/* হোম বাটন */}
+        {/* হোম বাটন - ইউনিক পালস অ্যানিমেশন */}
         <div className="nav-item" onClick={() => router.push('/')}>
-          <div className={`icon-only ${pathname === '/' ? 'active' : ''}`}>🏠</div>
+          <div className={`home-btn-unique ${pathname === '/' ? 'active' : ''}`}>
+            <span className="home-icon">🏠</span>
+            {pathname === '/' && <span className="pulse-ring"></span>}
+          </div>
         </div>
 
         {/* ১. Category বাটন */}
@@ -73,12 +86,21 @@ export default function MobileNav() {
           </div>
         </div>
 
-        {/* ৪. অ্যানিমেটেড অ্যাকাউন্ট বাটন (New Concept) */}
+        {/* ৪. অ্যাকাউন্ট বাটন */}
         <div className="nav-item" onClick={() => router.push(user ? '/account' : '/auth/login')}>
-          <div className={`animated-box ${pathname.includes('account') ? 'active-acc-box' : 'blue-border'}`}>
+          <div className={`animated-box ${user ? 'active-acc-box' : 'blue-border'}`}>
             <div className="track text-slide-account">
-              <span className="account-text">👤 পণ্য কিনতে হলে Login করুন — </span>
-              <span className="account-text">👤 পণ্য কিনতে হলে Login করুন — </span>
+              {user ? (
+                <>
+                  <span className="account-text">✅ ধন্যবাদ, {userName}! — </span>
+                  <span className="account-text">✅ লগইন সম্পন্ন হয়েছে — </span>
+                </>
+              ) : (
+                <>
+                  <span className="account-text">👤 পণ্য কিনতে হলে Login করুন — </span>
+                  <span className="account-text">👤 পণ্য কিনতে হলে Login করুন — </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -109,6 +131,44 @@ export default function MobileNav() {
           width: 20%;
           cursor: pointer;
         }
+
+        /* ইউনিক হোম বাটন ডিজাইন */
+        .home-btn-unique {
+          position: relative;
+          width: 42px;
+          height: 42px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8fafc;
+          border-radius: 14px;
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .home-icon { font-size: 22px; z-index: 2; }
+        
+        .home-btn-unique.active {
+          background: #fff5f0;
+          transform: scale(1.1) translateY(-2px);
+          border: 1px solid #ff4d00;
+        }
+
+        /* পালস ইফেক্ট - শুধুমাত্র হোমে থাকলে দেখা যাবে */
+        .pulse-ring {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 14px;
+          background: #ff4d00;
+          opacity: 0.6;
+          animation: pulseAnim 2s infinite;
+          z-index: 1;
+        }
+
+        @keyframes pulseAnim {
+          0% { transform: scale(1); opacity: 0.4; }
+          70% { transform: scale(1.4); opacity: 0; }
+          100% { transform: scale(1.4); opacity: 0; }
+        }
         
         .animated-box {
           width: 62px; 
@@ -127,17 +187,14 @@ export default function MobileNav() {
         .gray-border { background: #f9fafb; border-color: #94a3b8; }
         .blue-border { background: #f0f7ff; border-color: #3b82f6; }
 
-        /* এক্টিভ অবস্থায় অ্যাকাউন্ট বক্সের স্পেশাল লুক */
         .active-acc-box {
-          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          background: linear-gradient(135deg, #10b981, #059669);
           border-color: transparent;
-          box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+          box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
         }
-        .active-acc-box .account-text { color: white; }
+        .active-acc-box .account-text { color: white !important; }
 
         .track { display: flex; white-space: nowrap; align-items: center; }
-        
-        /* অ্যানিমেশন স্পিড কন্ট্রোল */
         .slide-slow { gap: 18px; padding: 0 10px; animation: slideAll 25s linear infinite; }
         .slide-fast { gap: 15px; padding: 0 10px; animation: slideAll 15s linear infinite; }
         .text-slide { animation: slideAll 12s linear infinite; }
@@ -149,25 +206,14 @@ export default function MobileNav() {
         }
 
         .slide-item { font-size: 18px; flex-shrink: 0; }
-        
-        .promo-text { 
+        .promo-text, .account-text { 
           font-size: 8px; 
           font-weight: 800; 
-          color: #dc2626; 
           padding-right: 20px; 
           white-space: nowrap;
         }
-
-        .account-text {
-          font-size: 8px;
-          font-weight: 800;
-          color: #2563eb;
-          padding-right: 20px;
-          white-space: nowrap;
-        }
-
-        .icon-only { font-size: 24px; color: #94a3b8; transition: color 0.2s; }
-        .icon-only.active { color: #ff4d00; }
+        .promo-text { color: #dc2626; }
+        .account-text { color: #2563eb; }
 
         @media (min-width: 1024px) { .mobile-nav-premium { display: none !important; } }
       `}</style>

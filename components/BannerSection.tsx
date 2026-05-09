@@ -1,27 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import HeroBanner from './HeroBanner';
 
 const categorySlugMap: Record<string, string> = {
   'অফার জোন': 'offer-zone',
   'ফোন': 'mobile',
-  'মোবাইল': 'mobile',
   'কম্পিউটার': 'computer',
   'ইলেকট্রনিক্স': 'electronics',
   'ফ্যাশন': 'fashion',
   'গাড়ি': 'car',
   'চাকরি': 'job',
   'সার্ভিস': 'service',
-  'জমি / প্রপার্টি': 'property',
   'জমি প্রপার্টি': 'property',
   'তথ্য': 'info',
-  'পাত্র-পাত্রী': 'matrimony',
   'পাত্রপাত্রী': 'matrimony',
-  'ভাড়া / রেন্ট': 'rent',
   'ভাড়া রেন্ট': 'rent',
-  'জরুরি সেবা': 'emergency',
   'জরুরি + মেডিসিন': 'emergency',
   'পশু': 'animal',
   'খাদ্য পণ্য': 'food',
@@ -51,13 +46,18 @@ interface BannerSectionProps {
 export default function BannerSection({ banners }: BannerSectionProps) {
   const router = useRouter();
   const [currentBanner, setCurrentBanner] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (banners.length === 0) return;
-    const slider = setInterval(() => {
+    if (banners.length <= 1) return;
+    
+    intervalRef.current = setInterval(() => {
       setCurrentBanner(prev => (prev + 1) % banners.length);
-    }, 3000);
-    return () => clearInterval(slider);
+    }, 4000);
+    
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [banners.length]);
 
   const handleBannerClick = () => {
@@ -67,21 +67,20 @@ export default function BannerSection({ banners }: BannerSectionProps) {
     router.push(`/category/${slug}`);
   };
 
-  const displayBanners = banners.length > 0 ? banners : [
-    { id: 1, title: 'AjkeDorkar', subtitle: 'Best Deals', color: '#e62e04', icon: '🛒' },
-  ];
+  // ✅ ব্যানার না থাকলে কিছুই দেখাবে না
+  if (banners.length === 0) {
+    return null;
+  }
 
   return (
     <div style={{ flex: 1 }}>
-      {/* ব্যানার স্লাইডার */}
       <div style={{ position: 'relative', borderRadius: '4px', overflow: 'hidden', cursor: 'pointer' }} onClick={handleBannerClick}>
-        <HeroBanner banners={displayBanners} currentBanner={currentBanner} />
+        <HeroBanner banners={banners} currentBanner={currentBanner} />
       </div>
 
-      {/* ডট ইন্ডিকেটর - শুধু এখানেই রাখুন */}
-      {displayBanners.length > 1 && (
+      {banners.length > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px 0' }}>
-          {displayBanners.map((_, i) => (
+          {banners.map((_, i) => (
             <div 
               key={i} 
               onClick={(e) => {

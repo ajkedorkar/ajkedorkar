@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from 'react';
+
 interface Banner {
   id: number;
   title: string;
@@ -17,29 +19,60 @@ interface HeroBannerProps {
   currentBanner: number;
 }
 
+// ✅ ডিফল্ট ব্যানার - সার্ভার ও ক্লায়েন্ট সাইডে একই থাকবে
+const DEFAULT_BANNER: Banner = {
+  id: 0,
+  title: 'AjkeDorkar',
+  subtitle: 'Best Deals',
+  color: '#e62e04',
+  icon: '🛒',
+};
+
 export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) {
-  // কোনো ব্যানার না থাকলে ডিফল্ট শো
-  if (!banners || banners.length === 0) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // ✅ mounting এর সময় ডিফল্ট ব্যানার দেখাবে (কোন ফ্লিক নেই)
+  if (!mounted) {
     return (
       <div className="hero-banner" style={{ 
         flex: 1, 
-        height: '200px', 
-        borderRadius: '4px', 
         overflow: 'hidden', 
-        background: '#e62e04', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        color: 'white' 
+        position: 'relative' 
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <span style={{ fontSize: '40px' }}>🛒</span>
-          <h2 style={{ fontSize: '18px' }}>AjkeDorkar</h2>
-          <p style={{ fontSize: '12px' }}>Welcome!</p>
+        <div className="banner-slide" style={{ 
+          minWidth: '100%', 
+          background: `linear-gradient(135deg, ${DEFAULT_BANNER.color}, ${DEFAULT_BANNER.color}cc)`,
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          color: 'white',
+          position: 'relative',
+          height: '200px'
+        }}>
+          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '15px' }}>
+            <span className="banner-icon" style={{ fontSize: '40px', display: 'block', marginBottom: '8px' }}>
+              {DEFAULT_BANNER.icon}
+            </span>
+            <h2 className="banner-title" style={{ margin: '0 0 6px 0', fontWeight: '800' }}>
+              {DEFAULT_BANNER.title}
+            </h2>
+            <p className="banner-subtitle" style={{ fontSize: '13px', margin: '0 0 10px 0' }}>
+              {DEFAULT_BANNER.subtitle}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
+
+  // ✅ ব্যানার না থাকলে ডিফল্ট
+  const activeBanners = (!banners || banners.length === 0) ? [DEFAULT_BANNER] : banners;
+  const activeCurrentBanner = (!banners || banners.length === 0) ? 0 : currentBanner;
 
   return (
     <div className="hero-banner" style={{ 
@@ -51,9 +84,9 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
         display: 'flex', 
         height: '100%', 
         transition: 'transform 0.5s ease', 
-        transform: `translateX(-${currentBanner * 100}%)` 
+        transform: `translateX(-${activeCurrentBanner * 100}%)` 
       }}>
-        {banners.map((banner, idx) => {
+        {activeBanners.map((banner) => {
           const showBtn = banner.show_button !== false;
           const btnText = banner.button_text || 'Shop Now';
           
@@ -73,7 +106,6 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 position: 'relative',
               }}>
               
-              {/* ইমেজ ওভারলে (ডার্ক শ্যাডো) */}
               {banner.image_url && (
                 <div style={{
                   position: 'absolute',
@@ -82,7 +114,6 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                 }} />
               )}
               
-              {/* কন্টেন্ট লজিক - আইকন এবং টেক্সট */}
               <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '15px' }}>
                 {!banner.image_url && (
                   <span className="banner-icon" style={{ fontSize: '40px', display: 'block', marginBottom: '8px' }}>
@@ -104,7 +135,6 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
                   {banner.subtitle}
                 </p>
                 
-                {/* ✅ বাটন যোগ করা হয়েছে - আগে ছিল না */}
                 {showBtn && (
                   <button className="banner-btn" style={{
                     background: 'white',
@@ -125,11 +155,8 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
           );
         })}
       </div>
-
-      {/* ✅ ইন্ডিকেটর সরিয়ে দেওয়া হয়েছে - এটা এখন BannerSection এ আছে */}
       
       <style jsx>{`
-        /* মোবাইলে হাইট ২০০ পিক্সেল */
         .banner-slide { 
           height: 200px !important; 
         }
@@ -141,8 +168,7 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
             border-radius: 8px !important;
           }
           .banner-slide {
-            /* PC-তে ডাটাবেসের banner_height বা ডিফল্ট 350px */
-            height: ${banners[0]?.banner_height || 350}px !important;
+            height: ${activeBanners[0]?.banner_height || 350}px !important;
           }
           .banner-title { font-size: 28px !important; }
           .banner-subtitle { font-size: 15px !important; }
@@ -150,7 +176,6 @@ export default function HeroBanner({ banners, currentBanner }: HeroBannerProps) 
           .banner-icon { font-size: 60px !important; }
         }
         
-        /* মোবাইলে ফুল উইডথ */
         @media (max-width: 1023px) {
           .hero-banner {
             border-radius: 0px !important;
