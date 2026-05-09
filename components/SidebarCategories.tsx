@@ -37,8 +37,8 @@ export default function SidebarCategories({ categories, onCategoryClick }: Sideb
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px',
-            borderBottom: '1px solid #f0f0f0',
-            flex: '1'
+            borderBottom: i !== categories.length - 1 ? '1px solid #f0f0f0' : 'none',
+            // ✅ 'flex: 1' সরিয়ে দেওয়া হয়েছে
           }}
         >
           <span className="cat-icon" style={{ width: '20px', flexShrink: 0 }}>{cat.icon}</span> 

@@ -58,7 +58,7 @@ export default function BannerSection({ banners }: BannerSectionProps) {
       setCurrentBanner(prev => (prev + 1) % banners.length);
     }, 3000);
     return () => clearInterval(slider);
-  }, [banners]);
+  }, [banners.length]);
 
   const handleBannerClick = () => {
     const banner = banners[currentBanner];
@@ -78,15 +78,28 @@ export default function BannerSection({ banners }: BannerSectionProps) {
         <HeroBanner banners={displayBanners} currentBanner={currentBanner} />
       </div>
 
-      {/* ডট ইন্ডিকেটর */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '5px', padding: '8px 0' }}>
-        {displayBanners.map((_, i) => (
-          <div key={i} onClick={() => setCurrentBanner(i)} style={{
-            width: i === currentBanner ? '18px' : '6px', height: '6px', borderRadius: '3px',
-            background: i === currentBanner ? '#e62e04' : '#ccc', cursor: 'pointer',
-          }} />
-        ))}
-      </div>
+      {/* ডট ইন্ডিকেটর - শুধু এখানেই রাখুন */}
+      {displayBanners.length > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '10px 0' }}>
+          {displayBanners.map((_, i) => (
+            <div 
+              key={i} 
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentBanner(i);
+              }} 
+              style={{
+                width: i === currentBanner ? '20px' : '6px',
+                height: '6px',
+                borderRadius: '3px',
+                background: i === currentBanner ? '#e62e04' : '#ccc',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }} 
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

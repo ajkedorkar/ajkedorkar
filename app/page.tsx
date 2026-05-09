@@ -88,7 +88,7 @@ export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [typingText, setTypingText] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [searchPlaceholders, setSearchPlaceholders] = useState<string[]>([
     "মোবাইল খুঁজুন...",
     "ফ্যাশন খুঁজুন...",
@@ -97,12 +97,16 @@ export default function Home() {
     "চাকরি খুঁজুন...",
   ]);
 
-  // ✅ Detect mobile/PC on client side only (hydration mismatch fix)
+  // ✅ Detect mobile/PC on client side only
   useEffect(() => {
-    setIsMobile(window.innerWidth < 1024);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
     
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
+      checkMobile();
     };
     
     window.addEventListener('resize', handleResize);
@@ -189,24 +193,56 @@ export default function Home() {
 
   const allCategories = useMemo(() => [...leftCategories, ...rightCategories], []);
 
+  // ✅ Don't render until we know device type
+  if (isMobile === null) {
+    return null;
+  }
+
+  // ✅ মোবাইল লেআউট - আলাদা করে দেওয়া হয়েছে
+  if (isMobile === true) {
+    return (
+      <div className={inter.className} style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+        <MobileHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        
+        <main className="main-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0' }}>
+          {/* মোবাইলে শুধু ব্যানার - সাইডবার নেই */}
+          <div style={{ padding: '0' }}>
+            <BannerSection banners={banners} />
+          </div>
+          
+          <div style={{ padding: '0 15px' }}>
+            {/* মোবাইলে ক্যাটাগরিগুলো গ্রিড আকারে */}
+            <Categories categories={allCategories} onCategoryClick={handleCategoryClick} />
+            
+            <Suspense fallback={<ProductGridSkeleton />}>
+              <ProductGrid />
+            </Suspense>
+          </div>
+        </main>
+        
+        <MobileNav />
+      </div>
+    );
+  }
+
+  // ✅ পিসি লেআউট
   return (
     <div className={inter.className} style={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <PCHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      <MobileHeader typingText={typingText} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       
       <main className="main-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0' }}>
         
-        {/* ✅ PC Layout - Fixed dimensions prevent refresh collapse */}
+        {/* PC Layout */}
         <div className="hero-section" style={{ 
           display: 'flex', 
           gap: '0', 
           alignItems: 'stretch', 
           margin: '0',
-          minHeight: '350px',  // Fixed minimum height
+          minHeight: '350px',
           width: '100%'
         }}>
           
-          {/* Left Sidebar - PC only */}
+          {/* Left Sidebar */}
           <div className="pc-sidebar-left" style={{ 
             width: '235px', 
             flexShrink: 0, 
@@ -225,12 +261,12 @@ export default function Home() {
             padding: '0', 
             minWidth: '0',
             minHeight: '350px',
-            background: '#e0e0e0'  // Fallback background while loading
+            background: '#e0e0e0'
           }}>
             <BannerSection banners={banners} />
           </div>
           
-          {/* Right Sidebar - PC only */}
+          {/* Right Sidebar */}
           <div className="pc-sidebar-right" style={{ 
             width: '235px', 
             flexShrink: 0, 
@@ -259,68 +295,42 @@ export default function Home() {
           overscroll-behavior: contain;
         }
         
-        /* ✅ Base responsive styles */
+        /* Base styles */
+        * {
+          box-sizing: border-box;
+        }
+        
+        /* PC styles */
         .pc-sidebar-left, .pc-sidebar-right {
-          display: block !important;
+          display: block;
         }
         
         .mobile-header, .mobile-nav, .mobile-categories {
-          display: none !important;
+          display: none;
         }
         
         .prod-grid {
-          grid-template-columns: repeat(6, 1fr) !important;
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 10px;
+          padding: 10px 0;
         }
         
-        .hero-banner {
-          height: 350px !important;
-        }
-        
-        /* ✅ Mobile styles */
+        /* Mobile styles - 1024px নিচে */
         @media (max-width: 1023px) {
-          .pc-sidebar-left, .pc-sidebar-right {
-            display: none !important;
-          }
-          
-          .mobile-header, .mobile-nav, .mobile-categories {
-            display: block !important;
-          }
-          
           .pc-header {
             display: none !important;
           }
           
           .prod-grid {
             grid-template-columns: repeat(3, 1fr) !important;
-          }
-          
-          .hero-banner {
-            height: 180px !important;
-          }
-          
-          .hero-section {
-            flex-direction: column !important;
-            min-height: auto !important;
-          }
-          
-          .mobile-banner-fix {
-            min-height: 180px !important;
-          }
-          
-          main {
-            padding-bottom: 90px;
+            gap: 8px;
           }
         }
         
-        /* ✅ Animation */
         @keyframes shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
-        }
-        
-        /* ✅ Ensure smooth rendering */
-        * {
-          box-sizing: border-box;
         }
       `}</style>
     </div>
