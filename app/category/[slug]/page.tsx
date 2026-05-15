@@ -6,10 +6,48 @@ import { supabase } from '@/lib/supabase';
 import PCHeader from '@/components/PCHeader';
 import MobileHeader from '@/components/MobileHeader';
 
+// ==================== সাব-ক্যাটাগরি ইমোজি ম্যাপ ====================
+const emojiMap: Record<string, string> = {
+  'ফ্ল্যাশ সেল': '⚡', 'ডেইলি ডিল': '🔥', 'কুপন': '🎟️', 'বান্ডেল': '🎁',
+  'ক্লিয়ারেন্স': '🧹', 'সব': '🛍️', 'স্মার্টফোন': '📱', 'ফিচার ফোন': '📞',
+  'ট্যাব': '📋', 'চার্জার': '🔌', 'ইয়ারফোন': '🎧', 'পাওয়ার ব্যাংক': '🔋',
+  'স্মার্টওয়াচ': '⌚', 'কভার': '🛡️', 'ব্যাটারি': '🔋', 'স্ক্রিন প্রোটেক্টর': '🛡️',
+  'হেডফোন': '🎧', 'ল্যাপটপ': '💻', 'ডেস্কটপ': '🖥️', 'মনিটর': '🖥️',
+  'প্রিন্টার': '🖨️', 'নেটওয়ার্কিং': '🌐', 'ওয়েবক্যাম': '📷', 'কিবোর্ড': '⌨️',
+  'মাউস': '🖱️', 'সফটওয়্যার': '💿', 'স্টোরেজ': '💾', 'টিভি': '📺',
+  'ফ্রিজ': '❄️', 'এসি': '🌬️', 'ওয়াশিং মেশিন': '🧺', 'ক্যামেরা': '📸',
+  'গেমিং': '🎮', 'ছোট ইলেকট্রনিক্স': '🔌', 'ফ্যান': '🌀', 'লাইট': '💡',
+  'সাউন্ড সিস্টেম': '🔊', 'হোম অ্যাপ্লায়েন্স': '🏠',
+  'কসমেটিকস': '💄', 'জুতা': '👞', 'জুয়েলারি': '💍', 'প্যান্ট': '👖', 'ব্যাগ': '👜',
+  'ব্রা-প্যান্টি': '👙', 'লেডিস সিক্রেট': '🤫', 'শাড়ি': '🥻', 'শার্ট': '👔',
+  'অটোরিকশা': '🛺', 'ইজিবাইক': '🛵', 'গাড়ির পার্টস': '⚙️', 'ট্রাক': '🚛',
+  'ট্রাক্টর': '🚜', 'পাওয়ার টিলার': '🚜', 'পাখি ভ্যান': '🐦', 'বেবি সাইকেল': '🚲',
+  'বেবি হোন্ডা': '🏍️', 'ভ্যান': '🚐', 'মোটরসাইকেল': '🏍️', 'সাইকেল': '🚲', 'সিএনজি': '⛽',
+  'পার্ট-টাইম': '🕒', 'ফ্রিল্যান্সিং': '💻', 'বিদেশ': '✈️', 'বেসরকারি': '🏢', 'সরকারি': '🏛️',
+  'ইলেকট্রিশিয়ান': '⚡', 'কুরিয়ার': '📦', 'টিউশন': '📚', 'প্লাম্বার': '🔧', 'মেকানিক': '🔩',
+  'অফিস': '🏢', 'দোকান': '🏪', 'প্লট': '🗺️', 'ফ্ল্যাট': '🏢', 'বিক্রি': '💰', 'ভাড়া': '🔑',
+  'খবর': '📰', 'টেন্ডার': '📋', 'বিজ্ঞপ্তি': '📢', 'শিক্ষা': '🎓', 'স্বাস্থ্য': '❤️',
+  'উইডো': '👩‍🦳', 'ডিভোর্সি': '💔', 'পাত্র': '🤵', 'পাত্রী': '👰',
+  'ইভেন্ট': '🎉', 'গাড়ি': '🚗', 'বাসা': '🏠', 'মেশিনারি': '⚙️',
+  'অক্সিজেন': '🫁', 'এম্বুলেন্স': '🚑', 'ডাক্তার': '👨‍⚕️', 'নার্সিং': '👩‍⚕️',
+  'পুলিশ': '👮', 'ফায়ার সার্ভিস': '🚒', 'ব্লাড': '🩸', 'মেডিসিন': '💊', 'রক্তদান': '🩸', 'হাসপাতাল': '🏥',
+  'গরু': '🐄', 'ছাগল': '🐐', 'পাখি': '🐦', 'মহিষ': '🐃', 'মাছ': '🐟', 'হাঁস-মুরগি': '🐔',
+  'চাল': '🍚', 'ডাল': '🥣', 'তেল': '🫒', 'ফল': '🍎', 'মসলা': '🌶️', 'মিষ্টি': '🍬', 'সবজি': '🥕',
+  'কীটনাশক': '☠️', 'কৃষি যন্ত্রপাতি': '🚜', 'গম': '🌾', 'ধান': '🌾', 'বীজ': '🌱', 'ভুট্টা': '🌽',
+  'সার': '💩', 'সেচ': '💧',
+  'কর্পোরেট': '💼', 'জন্মদিন': '🎂', 'ফুল': '💐', 'বিবাহ': '💒', 'ভালোবাসা': '❤️',
+  'কাঠ': '🪵', 'কাঠের আসবাব': '🪑', 'কাপড়': '🧵', 'চামড়া': '🪶', 'চামড়াজাত': '🪶',
+  'ধাতু': '⛓️', 'নকশিকাঁথা': '🧶', 'বাঁশ': '🎋', 'বাঁশের তৈরি': '🎋', 'মাটি': '🏺', 'মাটির পণ্য': '🏺',
+  'পুরাতন ইলেকট্রনিক্স': '📺', 'পুরাতন কাপড়': '👕', 'পুরাতন খেলনা': '🧸', 'পুরাতন গাড়ি': '🚙',
+  'পুরাতন ফার্নিচার': '🛋️', 'পুরাতন মোবাইল': '📱', 'বিনিময়': '🔄',
+  'গার্ডেনিং': '🌱', 'পরিষ্কার': '🧹', 'পেস্ট কন্ট্রোল': '🐀',
+'বৃদ্ধ কেয়ার': '👴', 'বেবি কেয়ার': '👶', 'রান্না': '🍳',
+};
+
 // ==================== ২০টা ক্যাটাগরির বাংলা থিম ====================
 const themeConfig: Record<string, any> = {
   'offer-zone': { heroBg: 'linear-gradient(135deg, #FF2D55, #FF6B35)', accent: '#FF2D55', title: 'অফার জোন', sub: 'ফ্ল্যাশ সেল - সীমিত সময়!', features: ['countdown', 'flash-badge'], cardStyle: 'flash', defaultBanner: 'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&q=80' },
-  'mobile': { heroBg: 'linear-gradient(135deg, #0071E3, #00C6FF)', accent: '#0071E3', title: 'ফোন', sub: 'প্রিমিয়াম কালেকশন', features: ['spec-table', 'compare-btn'], cardStyle: 'spec', defaultBanner: 'https://images.unsplash.com/photo-1550029402-226115b7c579?w=1200&q=80' },
+  'phone': { heroBg: 'linear-gradient(135deg, #0071E3, #00C6FF)', accent: '#0071E3', title: 'ফোন', sub: 'প্রিমিয়াম কালেকশন', features: ['spec-table', 'compare-btn'], cardStyle: 'spec', defaultBanner: 'https://images.unsplash.com/photo-1550029402-226115b7c579?w=1200&q=80' },
   'computer': { heroBg: 'linear-gradient(135deg, #00A651, #00C853)', accent: '#00A651', title: 'কম্পিউটার', sub: 'টেক ওয়ার্ল্ড', features: ['spec-chart', 'warranty'], cardStyle: 'spec', defaultBanner: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1200&q=80' },
   'electronics': { heroBg: 'linear-gradient(135deg, #8B5CF6, #A78BFA)', accent: '#8B5CF6', title: 'ইলেকট্রনিক্স', sub: 'গ্যাজেট জোন', features: ['energy-rating', 'warranty-tag'], cardStyle: 'energy', defaultBanner: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=1200&q=80' },
   'fashion': { heroBg: 'linear-gradient(135deg, #E91E63, #FF4081)', accent: '#E91E63', title: 'ফ্যাশন', sub: 'স্টাইল স্টোর', features: ['size-chart', 'color-variant'], cardStyle: 'fashion', defaultBanner: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&q=80' },
@@ -31,7 +69,7 @@ const themeConfig: Record<string, any> = {
 };
 
 const allCategories = [
-  { slug: 'offer-zone', label: 'অফার জোন' }, { slug: 'mobile', label: 'ফোন' },
+  { slug: 'offer-zone', label: 'অফার জোন' }, { slug: 'phone', label: 'ফোন' },
   { slug: 'computer', label: 'কম্পিউটার' }, { slug: 'electronics', label: 'ইলেকট্রনিক্স' },
   { slug: 'fashion', label: 'ফ্যাশন' }, { slug: 'car', label: 'গাড়ি' },
   { slug: 'job', label: 'চাকরি' }, { slug: 'service', label: 'সার্ভিস' },
@@ -86,7 +124,10 @@ export default function CategoryPage() {
   useEffect(() => { if (banners.length === 0) return; const t = setInterval(() => setCurrentBanner(p => (p + 1) % banners.length), 3000); return () => clearInterval(t); }, [banners]);
 
   // সাব-ক্যাটাগরি
-  useEffect(() => { supabase.from('subcategories').select('id, name, slug').eq('category_slug', slug).eq('is_active', true).order('name').then(({ data }) => { if (data?.length) setSubCategories(data); }); }, [slug]);
+  useEffect(() => { 
+    const actualSlug = slug === 'phone' ? 'mobile' : slug;
+    supabase.from('subcategories').select('id, name, slug').eq('category_slug', actualSlug).eq('is_active', true).order('name').then(({ data }) => { if (data?.length) setSubCategories(data); }); 
+  }, [slug]);
 
   // প্রোডাক্ট (Pagination ৫টা)
   const loadProducts = useCallback(async (sub: string, pageNum: number = 0, append: boolean = false) => {
@@ -154,9 +195,11 @@ export default function CategoryPage() {
 
             {/* সাব-ক্যাটাগরি ফিল্টার */}
             <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', padding: '8px 0 14px' }}>
-              <button onClick={() => setActiveSub('all')} style={subBtnStyle(activeSub === 'all', theme.accent)}>সব</button>
+              <button onClick={() => setActiveSub('all')} style={subBtnStyle(activeSub === 'all', theme.accent)}>🛍️ সব</button>
               {subCategories.map((s: any) => (
-                <button key={s.id} onClick={() => setActiveSub(s.slug)} style={subBtnStyle(activeSub === s.slug, theme.accent)}>{s.name}</button>
+                <button key={s.id} onClick={() => setActiveSub(s.slug)} style={subBtnStyle(activeSub === s.slug, theme.accent)}>
+                  {emojiMap[s.name] || '📦'} {s.name}
+                </button>
               ))}
             </div>
 
@@ -214,7 +257,7 @@ export default function CategoryPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginBottom: '16px' }}>
             {gridItems.map((sub, i) => sub ? (
               <div key={i} onClick={() => setActiveSub(sub.slug)} style={{ background: activeSub === sub.slug ? '#FFF0F0' : 'white', borderRadius: '8px', padding: '8px 4px', textAlign: 'center', cursor: 'pointer', border: activeSub === sub.slug ? `2px solid ${theme.accent}` : '1px solid #eee', transition: 'all 0.2s' }}>
-                <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#F5F5F5', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', color: theme.accent }}>{(sub.name as string)?.slice(0, 2)}</div>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#F5F5F5', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>{emojiMap[sub.name] || '📦'}</div>
                 <div style={{ fontSize: '9px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.name}</div>
               </div>
             ) : <div key={i} style={{ visibility: 'hidden' }} />)}

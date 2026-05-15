@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-
 
 const categories = [
   { label: 'অফার জোন', slug: 'offer-zone', icon: '🎯', color: '#FFF0F0', bgColor: '#FF416C' },
@@ -41,225 +40,147 @@ function MobileCategoryPage() {
   const searchParams = useSearchParams();
   const themeSlug = searchParams.get('theme');
 
- 
-
   const [activeCategory, setActiveCategory] = useState('offer-zone');
   const [products, setProducts] = useState<any[]>([]);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [stats, setStats] = useState({ total: 0, avgRating: 0, totalSold: 0 });
   const [announceText, setAnnounceText] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeCat = categories.find(c => c.slug === activeCategory);
   const currentColor = activeCat?.bgColor || '#e62e04';
 
-  // অ্যানাউন্সমেন্ট স্লাইডার
+  // ✅ সাব-ক্যাটাগরি
+  useEffect(() => {
+    supabase.from('subcategories').select('id, name, slug')
+      .eq('category_slug', activeCategory).eq('is_active', true).order('name')
+      .then(({ data }) => { if (data) setSubCategories(data); });
+  }, [activeCategory]);
+
+  // অ্যানাউন্সমেন্ট
   useEffect(() => {
     const timer = setInterval(() => {
       setIsAnimating(true);
-      setTimeout(() => {
-        setAnnounceText(prev => (prev + 1) % announcementTexts.length);
-        setIsAnimating(false);
-      }, 300);
+      setTimeout(() => { setAnnounceText(p => (p + 1) % announcementTexts.length); setIsAnimating(false); }, 300);
     }, 3000);
     return () => clearInterval(timer);
   }, []);
 
-  // ক্যাটাগরি ক্লিক করলে প্রোডাক্ট লোড
-  useEffect(() => {
-    async function loadProducts() {
-      setLoading(true);
-      const { data, count } = await supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .eq('category', activeCategory)
-        .order('created_at', { ascending: false })
-        .limit(15);
-      
-      if (data && data.length > 0) {
-        setProducts(data);
-        const avgRating = data.reduce((sum: number, p: any) => sum + (p.rating || 0), 0) / data.length;
-        const totalSold = data.reduce((sum: number, p: any) => sum + (p.sold || 0), 0);
-        setStats({ total: count || data.length, avgRating: Math.round(avgRating * 10) / 10, totalSold });
-      } else {
-        const dummy = Array.from({ length: 9 }, (_, i) => ({
-          id: i + 1,
-          title: `${activeCat?.label || ''} প্রোডাক্ট ${i + 1}`,
-          price: Math.floor(Math.random() * 5000) + 500,
-          image_url: `https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&sig=${i}`,
-          rating: (Math.random() * 2 + 3).toFixed(1),
-          sold: Math.floor(Math.random() * 1000),
-        }));
-        setProducts(dummy);
-        setStats({ total: dummy.length, avgRating: 4.2, totalSold: 2345 });
-      }
-      setLoading(false);
+  // ✅ ৫টা করে পেজিনেশন
+  const loadProducts = useCallback(async (pageNum = 0, append = false) => {
+    if (pageNum === 0) setLoading(true); else setLoadingMore(true);
+    const from = pageNum * 5, to = from + 4;
+    const { data, count } = await supabase.from('products').select('*', { count: 'exact' })
+      .eq('category', activeCategory).order('created_at', { ascending: false }).range(from, to);
+    
+    if (data?.length) {
+      if (append) setProducts(p => [...p, ...data]); else setProducts(data);
+      setStats({
+        total: count || data.length,
+        avgRating: Math.round(data.reduce((s: number, p: any) => s + (p.rating || 0), 0) / data.length * 10) / 10,
+        totalSold: data.reduce((s: number, p: any) => s + (p.sold || 0), 0)
+      });
+      setHasMore(count ? to + 1 < count : false);
+    } else if (!append) {
+      setProducts(Array.from({ length: 5 }, (_, i) => ({
+        id: i + 1, title: `${activeCat?.label || ''} প্রোডাক্ট ${i + 1}`, price: Math.floor(Math.random() * 5000) + 500,
+        image_url: `https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&sig=${i}`,
+        rating: (Math.random() * 2 + 3).toFixed(1), sold: Math.floor(Math.random() * 1000),
+      })));
+      setHasMore(false);
     }
-    loadProducts();
+    setLoading(false); setLoadingMore(false);
   }, [activeCategory]);
 
-  return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: '#F4F6F8', 
-      fontFamily: 'system-ui, sans-serif', 
-      paddingBottom: '80px',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      overflow: 'hidden',
-    }}>
-      
-      {/* ===== প্রিমিয়াম হেডার ===== */}
-      <div style={{
-        background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`,
-        padding: '10px 14px',
-        color: 'white',
-        zIndex: 100,
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-          <button onClick={() => router.push('/')} style={{
-            background: 'rgba(255,255,255,0.25)', border: 'none', color: 'white',
-            padding: '5px 12px', borderRadius: '16px', cursor: 'pointer',
-            fontSize: '12px', fontWeight: '600',
-          }}>← Home</button>
-          <span style={{ fontSize: '24px' }}>{activeCat?.icon || '🛍️'}</span>
-          <h1 style={{ fontSize: '17px', fontWeight: '800', margin: 0 }}>
-            {activeCat?.label || 'ক্যাটাগরি'}
-          </h1>
-        </div>
+  useEffect(() => { setPage(0); loadProducts(0); }, [loadProducts]);
 
+  // ✅ Infinite Scroll
+  const handleLoadMore = useCallback(() => { const np = page + 1; setPage(np); loadProducts(np, true); }, [page, loadProducts]);
+  useEffect(() => {
+    const h = () => {
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+      scrollTimer.current = setTimeout(() => {
+        if (loadingMore || !hasMore) return;
+        const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+        if (scrollTop + clientHeight >= scrollHeight - 200) handleLoadMore();
+      }, 150);
+    };
+    window.addEventListener('scroll', h, { passive: true });
+    return () => { window.removeEventListener('scroll', h); if (scrollTimer.current) clearTimeout(scrollTimer.current); };
+  }, [loadingMore, hasMore, handleLoadMore]);
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'system-ui, sans-serif', paddingBottom: '80px', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      
+      <div style={{ background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`, padding: '10px 14px', color: 'white', zIndex: 100, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <button onClick={() => router.push('/')} style={{ background: 'rgba(255,255,255,0.25)', border: 'none', color: 'white', padding: '5px 12px', borderRadius: '16px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>← Home</button>
+          <span style={{ fontSize: '24px' }}>{activeCat?.icon || '🛍️'}</span>
+          <h1 style={{ fontSize: '17px', fontWeight: '800', margin: 0 }}>{activeCat?.label || 'ক্যাটাগরি'}</h1>
+        </div>
         <div style={{ display: 'flex', gap: '14px', fontSize: '12px', opacity: 0.95, marginBottom: '8px', flexWrap: 'wrap' }}>
-          <span>📦 {stats.total}টি প্রোডাক্ট</span>
+          <span>📦 {stats.total}টি</span>
           {stats.avgRating > 0 && <span>⭐ {stats.avgRating}</span>}
           {stats.totalSold > 0 && <span>🔥 {stats.totalSold} বিক্রি</span>}
         </div>
-
-        <div style={{
-          background: 'rgba(0,0,0,0.25)',
-          borderRadius: '8px',
-          padding: '8px 12px',
-          fontSize: '12px',
-          fontWeight: '600',
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-          minHeight: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '6px',
-        }}>
-          <span style={{
-            transition: 'all 0.3s ease',
-            opacity: isAnimating ? 0 : 1,
-            transform: isAnimating ? 'translateY(-10px)' : 'translateY(0)',
-          }}>
-            {announcementTexts[announceText]}
-          </span>
-          
+        <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', fontWeight: '600', textAlign: 'center', position: 'relative', overflow: 'hidden', minHeight: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <span style={{ transition: 'all 0.3s ease', opacity: isAnimating ? 0 : 1, transform: isAnimating ? 'translateY(-10px)' : 'translateY(0)' }}>{announcementTexts[announceText]}</span>
           <div style={{ display: 'flex', gap: '3px', position: 'absolute', right: '10px' }}>
-            {announcementTexts.map((_, i) => (
-              <div key={i} style={{
-                width: i === announceText ? '14px' : '4px',
-                height: '4px',
-                borderRadius: '2px',
-                background: i === announceText ? 'white' : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.3s ease',
-              }} />
-            ))}
+            {announcementTexts.map((_, i) => (<div key={i} style={{ width: i === announceText ? '14px' : '4px', height: '4px', borderRadius: '2px', background: i === announceText ? 'white' : 'rgba(255,255,255,0.4)', transition: 'all 0.3s ease' }} />))}
           </div>
         </div>
+        {subCategories.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', padding: '6px 0 2px' }}>
+            {subCategories.map((s: any) => (
+              <button key={s.id} onClick={() => setActiveCategory(s.slug)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: '16px', cursor: 'pointer', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}>{s.name}</button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ===== মেইন কনটেন্ট ===== */}
-      <div style={{ 
-        display: 'flex', 
-        flex: 1,
-        overflow: 'hidden',
-        height: '100%',
-      }}>
-        
-        <div style={{ 
-          width: '100px', 
-          background: '#FFFFFF', 
-          overflowY: 'auto', 
-          borderRight: '1px solid #EBEBEB',
-          flexShrink: 0,
-          height: '100%',
-          WebkitOverflowScrolling: 'touch',
-        }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
+        <div style={{ width: '100px', background: '#FFFFFF', overflowY: 'auto', borderRight: '1px solid #EBEBEB', flexShrink: 0, height: '100%', WebkitOverflowScrolling: 'touch' }}>
           {categories.map((cat, i) => {
             const isActive = activeCategory === cat.slug;
             return (
-              <div 
-                key={i}
-                onClick={() => setActiveCategory(cat.slug)}
-                style={{
-                  padding: '14px 8px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  background: isActive ? cat.color : 'transparent',
-                  color: isActive ? '#FA5A28' : '#4B5563',
-                  borderLeft: isActive ? '3px solid #FA5A28' : '3px solid transparent',
-                  transition: 'all 0.15s ease',
-                  fontWeight: isActive ? '700' : '500',
-                }}
-              >
+              <div key={i} onClick={() => { setActiveCategory(cat.slug); setPage(0); }} style={{ padding: '14px 8px', textAlign: 'center', cursor: 'pointer', background: isActive ? cat.color : 'transparent', color: isActive ? '#FA5A28' : '#4B5563', borderLeft: isActive ? '3px solid #FA5A28' : '3px solid transparent', fontWeight: isActive ? '700' : '500' }}>
                 <div style={{ fontSize: '22px', marginBottom: '3px' }}>{cat.icon}</div>
                 <div style={{ fontSize: '10px', lineHeight: '1.2' }}>{cat.label}</div>
               </div>
             );
           })}
         </div>
-
-        <div style={{ 
-          flex: 1, 
-          padding: '12px 10px', 
-          overflowY: 'auto', 
-          background: '#fff',
-          height: '100%',
-          WebkitOverflowScrolling: 'touch',
-        }}>
+        <div style={{ flex: 1, padding: '12px 10px', overflowY: 'auto', background: '#fff', height: '100%', WebkitOverflowScrolling: 'touch' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳ লোড হচ্ছে...</div>
           ) : products.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-              <span style={{ fontSize: '40px', display: 'block', marginBottom: '8px' }}>📭</span>
-              কোনো প্রোডাক্ট পাওয়া যায়নি
-            </div>
+            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>📭 কোনো প্রোডাক্ট নেই</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-              {products.map((product, idx) => (
-                <div 
-                  key={idx}
-                  onClick={() => product.id && router.push(`/product/${product.id}`)}
-                  style={{
-                    background: '#FFFFFF', borderRadius: '10px', overflow: 'hidden',
-                    cursor: 'pointer', border: '1px solid #f0f0f0', transition: 'all 0.2s',
-                  }}
-                >
-                  <img 
-                    src={product.image_url || product.webp_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200'}
-                    style={{ width: '100%', height: '100px', objectFit: 'cover' }}
-                    alt={product.title}
-                  />
-                  <div style={{ padding: '8px' }}>
-                    <p style={{
-                      fontSize: '11px', fontWeight: '600', color: '#333', margin: '0 0 3px 0',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>{product.title}</p>
-                    {product.rating > 0 && (
-                      <span style={{ fontSize: '10px', color: '#FFB347', fontWeight: '600' }}>⭐ {product.rating}</span>
-                    )}
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#FA5A28', marginTop: '3px' }}>
-                      ৳{product.price?.toLocaleString()}
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                {products.map((p, i) => (
+                  <div key={i} onClick={() => p.id && router.push(`/product/${p.id}`)} style={{ background: '#FFFFFF', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #f0f0f0' }}>
+                    <img src={p.image_url || p.webp_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200'} style={{ width: '100%', height: '100px', objectFit: 'cover' }} alt="" loading="lazy" />
+                    <div style={{ padding: '8px' }}>
+                      <p style={{ fontSize: '11px', fontWeight: '600', margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</p>
+                      {p.rating > 0 && <span style={{ fontSize: '10px', color: '#FFB347', fontWeight: '600' }}>⭐ {p.rating}</span>}
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#FA5A28', marginTop: '3px' }}>৳{p.price?.toLocaleString()}</div>
                     </div>
                   </div>
+                ))}
+              </div>
+              {hasMore && (
+                <div style={{ textAlign: 'center', padding: '16px' }}>
+                  <button onClick={handleLoadMore} disabled={loadingMore} style={{ padding: '10px 24px', background: loadingMore ? '#ccc' : currentColor, color: 'white', border: 'none', borderRadius: '20px', cursor: loadingMore ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>{loadingMore ? '⏳' : '🔥 আরো ৫টি'}</button>
                 </div>
-              ))}
-            </div>
+              )}
+              {!hasMore && products.length > 0 && <p style={{ textAlign: 'center', color: '#999', fontSize: '12px', padding: '12px' }}>✅ শেষ</p>}
+            </>
           )}
         </div>
       </div>
@@ -267,14 +188,9 @@ function MobileCategoryPage() {
   );
 }
 
-// Suspense wrapper — Next.js 16 প্রয়োজন
 export default function Page() {
   return (
-    <Suspense fallback={
-      <div style={{ textAlign: 'center', padding: '50px', color: '#999', fontFamily: 'system-ui' }}>
-        ⏳ লোড হচ্ছে...
-      </div>
-    }>
+    <Suspense fallback={<div style={{ textAlign: 'center', padding: '50px', color: '#999' }}>⏳</div>}>
       <MobileCategoryPage />
     </Suspense>
   );

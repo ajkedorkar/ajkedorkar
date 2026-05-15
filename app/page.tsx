@@ -122,11 +122,16 @@ export default function Home() {
   });
 
   const handleCategoryClick = useCallback((slug: string) => {
-  router.push(`/category/${slug}`);
-}, [router]);
-  // Load Placeholders
-  useEffect(() => {
-    let isMounted = true;
+    if (slug === 'mobile') {
+      router.push('/category/phone');
+    } else {
+      router.push(`/category/${slug}`);
+    }
+  }, [router]);
+
+// Load Placeholders
+useEffect(() => {
+  let isMounted = true;
     
     async function loadPlaceholders() {
       try {
