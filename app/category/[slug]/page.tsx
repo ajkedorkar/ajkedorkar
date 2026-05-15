@@ -41,7 +41,7 @@ const emojiMap: Record<string, string> = {
   'পুরাতন ইলেকট্রনিক্স': '📺', 'পুরাতন কাপড়': '👕', 'পুরাতন খেলনা': '🧸', 'পুরাতন গাড়ি': '🚙',
   'পুরাতন ফার্নিচার': '🛋️', 'পুরাতন মোবাইল': '📱', 'বিনিময়': '🔄',
   'গার্ডেনিং': '🌱', 'পরিষ্কার': '🧹', 'পেস্ট কন্ট্রোল': '🐀',
-'বৃদ্ধ কেয়ার': '👴', 'বেবি কেয়ার': '👶', 'রান্না': '🍳',
+  'বৃদ্ধ কেয়ার': '👴', 'বেবি কেয়ার': '👶', 'রান্না': '🍳',
 };
 
 // ==================== ২০টা ক্যাটাগরির বাংলা থিম ====================
@@ -59,7 +59,7 @@ const themeConfig: Record<string, any> = {
   'matrimony': { heroBg: 'linear-gradient(135deg, #C62828, #E53935)', accent: '#C62828', title: 'পাত্রপাত্রী', sub: 'জীবনসঙ্গী খুঁজুন', features: ['biodata-card', 'matching-score'], cardStyle: 'profile', defaultBanner: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=1200&q=80' },
   'rent': { heroBg: 'linear-gradient(135deg, #6A1B9A, #8E24AA)', accent: '#6A1B9A', title: 'ভাড়া রেন্ট', sub: 'ভাড়ার হাব', features: ['price-per-month', 'location'], cardStyle: 'rental', defaultBanner: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1200&q=80' },
   'emergency': { heroBg: 'linear-gradient(135deg, #B71C1C, #D32F2F)', accent: '#B71C1C', title: 'জরুরি সেবা', sub: '২৪/৭ সেবা', features: ['contact-btn', '24-7-badge'], cardStyle: 'emergency', defaultBanner: 'https://images.unsplash.com/photo-1587745416684-47953f16fda3?w=1200&q=80' },
-  'animal': { heroBg: 'linear-gradient(135deg, #5D4037, #795548)', accent: '#5D4037', title: 'পশু', sub: 'গবাদিপশু', features: ['health-status', 'breed'], cardStyle: 'livestock', defaultBanner: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=1200&q=80' },
+  'animal': { heroBg: 'linear-gradient(135deg, #5D4037, #795548)', accent: '#5D4037', title: 'পশু', sub: 'গবাদিপশু', features: ['health-status', 'breed'], cardStyle: 'livestock', defaultBanner: 'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=1200&q=80' },
   'food': { heroBg: 'linear-gradient(135deg, #E64A19, #F4511E)', accent: '#E64A19', title: 'খাদ্য পণ্য', sub: 'খাদ্য বাজার', features: ['calories', 'expiry-date'], cardStyle: 'food', defaultBanner: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80' },
   'agriculture': { heroBg: 'linear-gradient(135deg, #33691E, #558B2F)', accent: '#33691E', title: 'কৃষি', sub: 'কৃষি পণ্য', features: ['harvest-season', 'yield'], cardStyle: 'crop', defaultBanner: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1200&q=80' },
   'gifts': { heroBg: 'linear-gradient(135deg, #AD1457, #C2185B)', accent: '#AD1457', title: 'উপহার', sub: 'উপহার সম্ভার', features: ['occasion-tag', 'gift-wrap'], cardStyle: 'gift', defaultBanner: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=1200&q=80' },
@@ -119,16 +119,43 @@ export default function CategoryPage() {
     return () => clearInterval(typing);
   }, []);
 
-  // ব্যানার
-  useEffect(() => { supabase.from('banners').select('*').eq('is_active', true).order('id').then(({ data }) => { if (data?.length) setBanners(data); }); }, []);
-  useEffect(() => { if (banners.length === 0) return; const t = setInterval(() => setCurrentBanner(p => (p + 1) % banners.length), 3000); return () => clearInterval(t); }, [banners]);
+ // ব্যানার - ক্যাটাগরির সব সাব-ক্যাটাগরি
+useEffect(() => { 
+  const actualSlug = slug === 'phone' ? 'mobile' : slug;
+  
+  // সেই ক্যাটাগরির সব সাব-ক্যাটাগরির নাম বের কর
+  const subNames = subCategories.map((s: any) => s.name);
+  
+  // ক্যাটাগরির ব্যানার + সব সাব-ক্যাটাগরির ব্যানার
+  supabase.from('banners').select('*')
+    .eq('is_active', true)
+    .or(`title.eq.${actualSlug},title.in.(${subNames.join(',')})`)
+    .order('id')
+    .then(({ data }) => { 
+      if (data?.length) {
+        setBanners(data);
+        setCurrentBanner(0);
+      } else {
+        // ফলব্যাক: শুধু ক্যাটাগরি ব্যানার
+        supabase.from('banners').select('*')
+          .eq('is_active', true)
+          .eq('title', actualSlug)
+          .order('id')
+          .then(({ data: fallback }) => { 
+            if (fallback?.length) setBanners(fallback);
+          });
+      }
+    }); 
+}, [slug, subCategories]);
 
-  // সাব-ক্যাটাগরি
-  useEffect(() => { 
-    const actualSlug = slug === 'phone' ? 'mobile' : slug;
-    supabase.from('subcategories').select('id, name, slug').eq('category_slug', actualSlug).eq('is_active', true).order('name').then(({ data }) => { if (data?.length) setSubCategories(data); }); 
-  }, [slug]);
+// অটো স্লাইড
+useEffect(() => { if (banners.length === 0) return; const t = setInterval(() => setCurrentBanner(p => (p + 1) % banners.length), 3000); return () => clearInterval(t); }, [banners]);
 
+// সাব-ক্যাটাগরি
+useEffect(() => { 
+  const actualSlug = slug === 'phone' ? 'mobile' : slug;
+  supabase.from('subcategories').select('id, name, slug').eq('category_slug', actualSlug).eq('is_active', true).order('name').then(({ data }) => { if (data?.length) setSubCategories(data); }); 
+}, [slug]);
   // প্রোডাক্ট (Pagination ৫টা)
   const loadProducts = useCallback(async (sub: string, pageNum: number = 0, append: boolean = false) => {
     if (pageNum === 0) setLoading(true); else setLoadingMore(true);

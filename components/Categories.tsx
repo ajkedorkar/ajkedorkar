@@ -13,104 +13,112 @@ interface CategoriesProps {
 
 export default function Categories({ categories, onCategoryClick }: CategoriesProps) {
   return (
-    <div className="mobile-categories" style={{ marginTop: '10px' }}>
+    <div className="mobile-categories" style={{ marginTop: '10px', padding: '0 8px' }}>
       
-      {/* ১৫ সেকেন্ডের স্লো এবং স্মুথ ৭ কালার চেঞ্জিং বক্স */}
-      <div className="triple-header-container">
-        
-        {/* বক্স ১: আপনার যা প্রয়োজন */}
-        <div className="equal-box rainbow-slow-1">
-          <span className="icon-style">✨</span>
-          <span className="box-text">আপনার যা প্রয়োজন</span>
+      {/* ওপরের স্লাইডিং প্রিমিয়াম বক্সগুলো */}
+      <div className="premium-sliding-container">
+        <div className="dynamic-box rainbow-cycle">
+          <div className="track text-slide">
+             <span>✨ আপনার যা প্রয়োজন — সেরা ডিল এখানে — ✨ </span>
+          </div>
         </div>
         
-        {/* বক্স ২: Flash Sale */}
-        <div className="equal-box rainbow-slow-2">
-          <span className="icon-style">⚡</span>
-          <span className="box-text">Flash Sale</span>
+        <div className="dynamic-box rainbow-cycle delay-1">
+          <div className="track text-slide">
+             <span>⚡ Flash Sale — দ্রুত কিনুন — ⚡ </span>
+          </div>
         </div>
 
-        {/* বক্স ৩: Discount */}
-        <div className="equal-box rainbow-slow-3">
-          <span className="box-text">১০% Discount</span>
+        <div className="dynamic-box rainbow-cycle delay-2">
+          <div className="track text-slide">
+             <span>🎁 ১০% Discount — আজকেই দরকার — 🎁 </span>
+          </div>
         </div>
-        
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+      {/* ক্যাটাগরি গ্রিড - এখানে প্রতি লাইনে ৪টি করে আইটেম থাকবে */}
+      <div className="categories-grid-fixed">
         {categories.map((cat, i) => (
           <div 
             key={i} 
             onClick={() => onCategoryClick(cat.slug)}
-            style={{
-              background: 'white', 
-              borderRadius: '10px', 
-              padding: '12px 4px', 
-              textAlign: 'center', 
-              cursor: 'pointer', 
-              border: '1px solid #eee', 
-            }}
+            className="category-card"
           >
-            <span style={{ fontSize: '24px', display: 'block', marginBottom: '4px' }}>{cat.icon}</span>
-            <span style={{ fontSize: '10px', color: '#555', fontWeight: '600' }}>{cat.label}</span>
+            <div className="icon-wrapper">{cat.icon}</div>
+            <span className="label-style">{cat.label}</span>
           </div>
         ))}
       </div>
 
       <style jsx>{`
-        .triple-header-container {
+        .premium-sliding-container {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          margin-bottom: 15px;
-          padding: 0 4px;
+          margin-bottom: 12px;
           gap: 6px;
         }
 
-        .equal-box {
-          flex: 1; 
-          height: 36px; 
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .dynamic-box {
+          flex: 1; height: 38px; 
+          display: flex; align-items: center; 
+          overflow: hidden; border-radius: 10px;
         }
 
-        .box-text {
-          font-size: 8.5px;
-          font-weight: 900;
-          color: white;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-          text-transform: uppercase;
+        .track { display: flex; white-space: nowrap; }
+        .text-slide { animation: slideText 8s linear infinite; }
+        @keyframes slideText { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        .dynamic-box span {
+          font-size: 8px; font-weight: 900; color: white;
+          padding: 0 10px; text-transform: uppercase;
         }
 
-        .icon-style { font-size: 11px; margin-right: 3px; }
+        /* ২০ রঙের অ্যানিমেশন */
+        .rainbow-cycle { animation: changeColors 20s linear infinite; }
+        .delay-1 { animation-delay: -5s; }
+        .delay-2 { animation-delay: -10s; }
 
-        /* ১৫ সেকেন্ডের অতি ধীরগতির অ্যানিমেশন (চোখের জন্য আরামদায়ক) */
-        @keyframes rainbow-slow {
-          0%   { background-color: #ff3b3b; } /* লাল */
-          14%  { background-color: #ff9800; } /* কমলা */
-          28%  { background-color: #ffeb3b; } /* হলুদ */
-          42%  { background-color: #4caf50; } /* সবুজ */
-          57%  { background-color: #2196f3; } /* নীল */
-          71%  { background-color: #673ab7; } /* বেগুনী */
-          85%  { background-color: #9c27b0; } /* ভায়োলেট */
-          100% { background-color: #ff3b3b; } /* আবার লাল */
+        @keyframes changeColors {
+          0% { background-color: #ff4d00; }
+          25% { background-color: #ef4444; }
+          50% { background-color: #3b82f6; }
+          75% { background-color: #10b981; }
+          100% { background-color: #ff4d00; }
         }
 
-        .rainbow-slow-1 {
-          animation: rainbow-slow 15s infinite ease-in-out;
+        /* ফিক্সড গ্রিড লেআউট - ৪টি কলাম */
+        .categories-grid-fixed {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr); /* প্রতি লাইনে ৪টি */
+          gap: 10px;
+          padding-bottom: 20px;
         }
 
-        .rainbow-slow-2 {
-          animation: rainbow-slow 15s infinite ease-in-out;
-          animation-delay: -5s; /* ৫ সেকেন্ড ডিলে */
+        .category-card {
+          background: white;
+          border-radius: 12px;
+          padding: 12px 4px;
+          text-align: center;
+          cursor: pointer;
+          border: 1px solid #f0f0f0;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+          transition: transform 0.2s;
         }
 
-        .rainbow-slow-3 {
-          animation: rainbow-slow 15s infinite ease-in-out;
-          animation-delay: -10s; /* ১০ সেকেন্ড ডিলে */
+        .category-card:active { transform: scale(0.92); }
+
+        .icon-wrapper {
+          font-size: 26px;
+          margin-bottom: 6px;
+          display: block;
+        }
+
+        .label-style {
+          font-size: 10px;
+          color: #444;
+          font-weight: 700;
+          display: block;
+          line-height: 1.2;
         }
       `}</style>
     </div>

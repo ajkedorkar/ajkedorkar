@@ -120,14 +120,13 @@ export default function Home() {
     dedupingInterval: 60000,
     refreshInterval: 300000,
   });
-
-  const handleCategoryClick = useCallback((slug: string) => {
-    if (slug === 'mobile') {
-      router.push('/category/phone');
-    } else {
-      router.push(`/category/${slug}`);
-    }
-  }, [router]);
+const handleCategoryClick = useCallback((slug: string) => {
+  if (slug === 'mobile') {
+    router.push('/category/phone');
+  } else {
+    router.push(`/category/${slug}`);
+  }
+}, [router]);
 
 // Load Placeholders
 useEffect(() => {

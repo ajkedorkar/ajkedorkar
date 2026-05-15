@@ -11,6 +11,7 @@ interface Product {
   old_price?: number;
   discount?: number;
   category: string;
+  subcategory?: string;
   image_url: string;
   webp_url?: string;
   description?: string;
@@ -40,13 +41,16 @@ const categories = [
   { value: 'emergency', label: '🚑 জরুরি সেবা' },
   { value: 'animal', label: '🐄 পশু' },
   { value: 'food', label: '🍪 খাদ্য পণ্য' },
-  { value: 'daily-needs', label: '🛒 নিত্যপ্রয়োজনীয়' },
+  { value: 'agriculture', label: '🌾 কৃষি' },
   { value: 'gifts', label: '🎁 উপহার' },
   { value: 'handicraft', label: '🔪 হস্তশিল্প' },
+  { value: 'second-hand', label: '🏚️ পুরাতন' },
+  { value: 'home-service', label: '🏠 হোম সার্ভিস' },
 ];
 
 export default function ProductAdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -58,7 +62,6 @@ export default function ProductAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [replaceUploading, setReplaceUploading] = useState<number | null>(null);
   
-  // ✅ Pagination State
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -66,53 +69,44 @@ export default function ProductAdminPage() {
 
   const emptyForm = {
     title: '', price: '', old_price: '', discount: '', category: 'offer-zone',
-    description: '', image_url: '', webp_url: '', stock: '', rating: '', seller_phone: '',
+    subcategory: '', description: '', image_url: '', webp_url: '', stock: '', rating: '', seller_phone: '',
   };
   const [form, setForm] = useState({...emptyForm});
 
   useEffect(() => { loadProducts(true); }, [filterCategory, filterStatus, searchTerm]);
 
+  // সাব-ক্যাটাগরি লোড
+  useEffect(() => {
+    if (!form.category) return;
+    supabase.from('subcategories')
+      .select('id, name, slug')
+      .eq('category_slug', form.category)
+      .eq('is_active', true)
+      .order('name')
+      .then(({ data }) => { if (data) setSubCategories(data); });
+  }, [form.category]);
+
   async function loadProducts(resetPage: boolean = true) {
-    if (resetPage) {
-      setPage(1);
-      setProducts([]);
-    }
-    
+    if (resetPage) { setPage(1); setProducts([]); }
     setLoading(true);
-    
     const currentPage = resetPage ? 1 : page;
     const start = (currentPage - 1) * LIMIT;
     const end = start + LIMIT - 1;
-    
     try {
-      let query = supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(start, end);
-        
+      let query = supabase.from('products').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(start, end);
       if (filterCategory !== 'all') query = query.eq('category', filterCategory);
       if (filterStatus === 'pending') query = query.eq('status', 'pending');
       if (filterStatus === 'approved') query = query.eq('status', 'approved');
       if (filterStatus === 'premium') query = query.eq('is_premium', true);
       if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
-      
       const { data, count } = await query;
-      
       if (data) {
-        if (resetPage) {
-          setProducts(data);
-        } else {
-          setProducts(prev => [...prev, ...data]);
-        }
+        if (resetPage) setProducts(data); else setProducts(prev => [...prev, ...data]);
         setTotalCount(count || 0);
         setHasMore((count || 0) > end + 1);
       }
-      
-      // স্ট্যাটস লোড
       const { data: all } = await supabase.from('products').select('status, is_premium');
       if (all) setStats({ total: all.length, pending: all.filter(p => p.status === 'pending').length, premium: all.filter(p => p.is_premium).length });
-      
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -120,7 +114,6 @@ export default function ProductAdminPage() {
     }
   }
 
-  // ✅ লোড মোর ফাংশন
   const loadMore = async () => {
     if (loading || !hasMore) return;
     const nextPage = page + 1;
@@ -178,8 +171,8 @@ export default function ProductAdminPage() {
       title: form.title, price: parseFloat(form.price),
       old_price: form.old_price ? parseFloat(form.old_price) : null,
       discount: form.discount ? parseInt(form.discount) : 0,
-      category: form.category, description: form.description,
-      image_url: form.image_url, webp_url: form.webp_url,
+      category: form.category, subcategory: form.subcategory || null,
+      description: form.description, image_url: form.image_url, webp_url: form.webp_url,
       stock: form.stock ? parseInt(form.stock) : 0,
       rating: form.rating ? parseFloat(form.rating) : 0,
       seller_phone: form.seller_phone,
@@ -204,6 +197,7 @@ export default function ProductAdminPage() {
     setForm({
       title: p.title, price: String(p.price), old_price: p.old_price ? String(p.old_price) : '',
       discount: p.discount ? String(p.discount) : '', category: p.category,
+      subcategory: p.subcategory || '',
       description: p.description || '', image_url: p.image_url || '', webp_url: p.webp_url || '',
       stock: p.stock ? String(p.stock) : '', rating: p.rating ? String(p.rating) : '',
       seller_phone: p.seller_phone || '',
@@ -214,7 +208,6 @@ export default function ProductAdminPage() {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       
-      {/* হেডার */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px',
         background: 'linear-gradient(135deg, #1a1a2e, #0f0f1a)', padding: '20px 24px',
@@ -233,7 +226,6 @@ export default function ProductAdminPage() {
         }}>➕ {showForm ? 'ফর্ম বন্ধ' : 'নতুন প্রোডাক্ট'}</button>
       </div>
 
-      {/* ফিল্টার বার */}
       <div style={{ background: 'white', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap', border: '1px solid #e8eaed' }}>
         <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadProducts(true)} placeholder="🔍 সার্চ..." style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '13px', minWidth: '150px' }} />
         <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={sel}>
@@ -248,7 +240,6 @@ export default function ProductAdminPage() {
         </select>
       </div>
 
-      {/* 📝 এডিট/নতুন ফর্ম */}
       {showForm && (
         <div style={{ background: 'white', padding: '24px', borderRadius: '14px', marginBottom: '20px', border: '1px solid #e8eaed', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700' }}>
@@ -271,10 +262,21 @@ export default function ProductAdminPage() {
                   {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
+              <div>
+                <label style={lbl}>🏷️ সাব-ক্যাটাগরি</label>
+                <select value={form.subcategory || ''} onChange={e => setForm({...form, subcategory: e.target.value})} style={inp}>
+                  <option value="">সিলেক্ট করুন</option>
+                  {subCategories.map((s: any) => (
+                    <option key={s.slug} value={s.slug}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div><label style={lbl}>⭐ রেটিং</label><input value={form.rating} onChange={e => setForm({...form, rating: e.target.value})} type="number" step="0.1" style={inp} /></div>
+              <div><label style={lbl}>📱 সেলার ফোন</label><input value={form.seller_phone} onChange={e => setForm({...form, seller_phone: e.target.value})} style={inp} /></div>
             </div>
             <div><label style={lbl}>📄 বিবরণ</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} style={{...inp, height: '80px', resize: 'vertical'}} /></div>
-            <div><label style={lbl}>📱 সেলার ফোন</label><input value={form.seller_phone} onChange={e => setForm({...form, seller_phone: e.target.value})} style={inp} /></div>
             <div>
               <label style={lbl}>🖼️ ইমেজ</label>
               <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} disabled={uploading} style={{ fontSize: '12px' }} />
@@ -291,7 +293,6 @@ export default function ProductAdminPage() {
         </div>
       )}
 
-      {/* প্রোডাক্ট লিস্ট */}
       {loading && products.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>⏳ লোড হচ্ছে...</div>
       ) : products.length === 0 ? (
@@ -313,6 +314,7 @@ export default function ProductAdminPage() {
                     <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                       <span style={{ fontSize: '12px', color: '#1a73e8', fontWeight: '700' }}>৳{p.price?.toLocaleString()}</span>
                       <span style={{ fontSize: '10px', background: '#f0f0f0', padding: '2px 8px', borderRadius: '10px' }}>{categories.find(c => c.value === p.category)?.label || p.category}</span>
+                      {p.subcategory && <span style={{ fontSize: '10px', background: '#e8f0fe', color: '#1a73e8', padding: '2px 8px', borderRadius: '10px' }}>{p.subcategory}</span>}
                       {p.status === 'pending' && <span style={{ fontSize: '10px', background: '#FFF3E0', color: '#E65100', padding: '2px 8px', borderRadius: '10px' }}>⏳ পেন্ডিং</span>}
                       {p.is_premium && <span style={{ fontSize: '10px', background: '#1a1a2e', color: '#FFB347', padding: '2px 8px', borderRadius: '10px' }}>👑 প্রিমিয়াম</span>}
                     </div>
@@ -334,29 +336,16 @@ export default function ProductAdminPage() {
             ))}
           </div>
           
-          {/* ✅ লোড মোর বাটন */}
           {hasMore && (
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <button 
-                onClick={loadMore} 
-                disabled={loading}
-                style={{
-                  background: loading ? '#ccc' : '#e62e04',
-                  color: 'white',
-                  border: 'none',
-                  padding: '10px 30px',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontWeight: '600',
-                  fontSize: '13px'
-                }}
-              >
+              <button onClick={loadMore} disabled={loading} style={{
+                background: loading ? '#ccc' : '#e62e04', color: 'white', border: 'none', padding: '10px 30px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px'
+              }}>
                 {loading ? '⏳ লোড হচ্ছে...' : `আরও দেখুন + (${totalCount - products.length} বাকি)`}
               </button>
             </div>
           )}
           
-          {/* ✅ সব লোড হয়ে গেলে */}
           {!hasMore && products.length > 0 && (
             <div style={{ textAlign: 'center', marginTop: '20px', color: '#00a651', fontSize: '12px' }}>
               ✅ সব {totalCount}টি প্রোডাক্ট দেখানো হয়েছে
@@ -365,7 +354,6 @@ export default function ProductAdminPage() {
         </>
       )}
 
-      {/* প্রিভিউ মোডাল */}
       {previewProduct && (
         <div onClick={() => setPreviewProduct(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '14px', padding: '24px', maxWidth: '500px', width: '100%', maxHeight: '80vh', overflowY: 'auto' }}>
