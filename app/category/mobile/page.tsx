@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
+
 const categories = [
   { label: 'অফার জোন', slug: 'offer-zone', icon: '🎯', color: '#FFF0F0', bgColor: '#FF416C' },
   { label: 'ফোন', slug: 'mobile', icon: '📱', color: '#F0F5FF', bgColor: '#1a73e8' },
@@ -40,8 +41,8 @@ function MobileCategoryPage() {
   const searchParams = useSearchParams();
   const themeSlug = searchParams.get('theme');
 
-  // 🚀 থিম চেক — offer-zone হলে নতুন থিম দেখাবে
-  
+ 
+
   const [activeCategory, setActiveCategory] = useState('offer-zone');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

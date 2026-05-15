@@ -122,13 +122,8 @@ export default function Home() {
   });
 
   const handleCategoryClick = useCallback((slug: string) => {
-    if (isMobile) {
-      router.push(`/category/mobile?theme=${slug}`);
-    } else {
-      router.push(`/category/${slug}`);
-    }
-  }, [router, isMobile]);
-
+  router.push(`/category/${slug}`);
+}, [router]);
   // Load Placeholders
   useEffect(() => {
     let isMounted = true;
