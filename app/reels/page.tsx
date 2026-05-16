@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 // ==================== এম্বেড URL জেনারেটর ====================
 function getEmbedUrl(reel: any) {
   if (reel.platform === 'youtube') {
-    return `https://www.youtube.com/embed/${reel.video_id}?autoplay=1&mute=0&loop=1&playlist=${reel.video_id}`;
+    return `https://www.youtube.com/embed/${reel.video_id}?autoplay=1&mute=0&loop=1&playlist=${reel.video_id}&modestbranding=1&controls=0&rel=0&showinfo=0`;
   }
   if (reel.platform === 'facebook') {
     return `https://www.facebook.com/plugins/video.php?href=https://www.facebook.com/reel/${reel.video_id}&show_text=false&autoplay=true&width=476`;
@@ -91,7 +91,6 @@ export default function ReelsPage() {
       <div className="reel-pc-container">
         <div style={{ display: 'flex', height: '100vh', maxWidth: '1200px', margin: '0 auto', alignItems: 'center', gap: '40px', padding: '0 20px' }}>
           
-          {/* ভিডিও সেকশন */}
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: '420px', height: '75vh', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 0 30px rgba(255,255,255,0.1)', position: 'relative' }}>
               <iframe
@@ -100,14 +99,12 @@ export default function ReelsPage() {
                 allow="autoplay; fullscreen"
                 allowFullScreen
               />
-              {/* ⚡ AjkeReels ব্র্যান্ডিং */}
               <div style={{ position: 'absolute', top: '12px', left: '12px', background: 'linear-gradient(135deg, #7C3AED, #A78BFA)', borderRadius: '8px', padding: '4px 10px', color: 'white', fontSize: '10px', fontWeight: '700' }}>
                 ⚡ AjkeReels
               </div>
             </div>
           </div>
 
-          {/* প্রোডাক্ট কার্ড (PC) */}
           {productInfo && (
             <div style={{ width: '300px', background: '#1a1a1a', borderRadius: '16px', padding: '24px', color: 'white' }}>
               <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>🛍️ ফিচার্ড প্রোডাক্ট</h3>
@@ -123,7 +120,6 @@ export default function ReelsPage() {
           )}
         </div>
 
-        {/* PC নেভিগেশন ডটস */}
         <div style={{ position: 'fixed', right: '20px', top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {reels.map((_, i) => (
             <div key={i} onClick={() => setCurrentIndex(i)} style={{
@@ -149,17 +145,15 @@ export default function ReelsPage() {
               <div key={index} style={{ height: '100vh', position: 'relative', background: '#000' }}>
                 <iframe
                   src={getEmbedUrl(reel)}
-                  style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
                   allow="autoplay; fullscreen"
                   allowFullScreen
                 />
                 
-                {/* ⚡ AjkeReels ব্র্যান্ডিং (মোবাইল) */}
                 <div style={{ position: 'absolute', top: '16px', left: '12px', background: 'linear-gradient(135deg, #7C3AED, #A78BFA)', borderRadius: '8px', padding: '5px 12px', color: 'white', fontSize: '11px', fontWeight: '700', zIndex: 10 }}>
                   ⚡ AjkeReels
                 </div>
 
-                {/* প্রোডাক্ট ট্যাগ (মোবাইল) */}
                 {reel.product_id && productInfo && index === currentIndex && (
                   <div style={{
                     position: 'absolute', bottom: '20px', left: '12px', right: '12px',
@@ -178,7 +172,6 @@ export default function ReelsPage() {
                   </div>
                 )}
 
-                {/* ডান পাশের বাটন (মোবাইল) */}
                 <div style={{ position: 'absolute', right: '10px', bottom: '120px', display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center', zIndex: 10 }}>
                   <div style={{ textAlign: 'center', color: 'white' }}>
                     <span style={{ fontSize: '22px' }}>❤️</span>
@@ -198,7 +191,6 @@ export default function ReelsPage() {
                   </div>
                 </div>
 
-                {/* প্রগ্রেস বার */}
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'rgba(255,255,255,0.2)', zIndex: 10 }}>
                   <div style={{
                     width: index === currentIndex ? '100%' : '0%',
