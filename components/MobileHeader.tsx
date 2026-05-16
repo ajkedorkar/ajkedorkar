@@ -18,7 +18,7 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
   };
 
   return (
-    <header className="mobile-header-root">
+    <header className="mobile-header-root rainbow-bg-20">
       <div className="header-flex">
         
         {/* লোগো সেকশন */}
@@ -63,36 +63,36 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
       </div>
 
       <style jsx>{`
+        /* ৬০ সেকেন্ডের অতি ধীরগতির এবং প্রিমিয়াম অ্যানিমেশন ব্যাকগ্রাউন্ড */
         .mobile-header-root {
-          background: #e62e04;
           padding: 8px 12px;
           position: sticky;
           top: 0;
           z-index: 1000;
           box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+          animation: headerRainbow 60s linear infinite; /* ২৫ সেকেন্ড থেকে বাড়িয়ে ৬০ সেকেন্ড করা হলো */
         }
 
         .header-flex {
           display: flex;
           align-items: center;
-          gap: 8px; /* গ্যাপ একটু কমানো হয়েছে যাতে ছোট স্ক্রিনে জায়গা পায় */
+          gap: 8px;
           max-width: 100%;
         }
 
         .brand-badge {
           display: flex;
           align-items: center;
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.2);
           padding: 4px 8px;
           border-radius: 10px;
           cursor: pointer;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.25);
           flex-shrink: 0;
         }
         .logo-main { color: white; font-weight: 900; font-size: 18px; }
-        .logo-sub { color: rgba(255,255,255,0.7); font-weight: 900; font-size: 18px; margin-left: 1px; }
+        .logo-sub { color: rgba(255,255,255,0.8); font-weight: 900; font-size: 18px; margin-left: 1px; }
 
-        /* সার্চ এরিয়া ফিক্স */
         .search-input-area {
           flex: 1;
           display: flex;
@@ -101,9 +101,9 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
           height: 38px;
           border-radius: 10px;
           padding: 0 4px 0 12px;
-          position: relative; /* আইকন পজিশন কন্ট্রোলের জন্য */
+          position: relative;
           overflow: hidden;
-          min-width: 0; /* ফ্লেক্স বক্স ওভারফ্লো প্রতিরোধে */
+          min-width: 0;
         }
         
         .header-input {
@@ -113,7 +113,7 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
           font-size: 13px;
           color: #333;
           background: transparent;
-          padding-right: 5px; /* আইকন থেকে টেক্সটের দূরত্ব */
+          padding-right: 5px;
         }
 
         .search-btn-icon {
@@ -124,7 +124,8 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
           justify-content: center;
           color: #e62e04;
           cursor: pointer;
-          flex-shrink: 0; /* আইকন যাতে ছোট না হয়ে যায় */
+          flex-shrink: 0;
+          transition: color 0.5s ease;
         }
 
         .header-actions-wrap {
@@ -155,7 +156,32 @@ export default function MobileHeader({ typingText, searchQuery, onSearchChange }
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid #e62e04;
+          border: 2px solid #222;
+        }
+
+        /* ২০টি ইউনিক কালারের ধীরগতির সিকোয়েন্স */
+        @keyframes headerRainbow {
+          0%   { background-color: #e62e04; }
+          5%   { background-color: #f24e1e; }
+          10%  { background-color: #ff6b00; }
+          15%  { background-color: #ff9900; }
+          20%  { background-color: #e0a900; }
+          25%  { background-color: #10b981; }
+          30%  { background-color: #059669; }
+          35%  { background-color: #0d9488; }
+          40%  { background-color: #06b6d4; }
+          45%  { background-color: #0ea5e9; }
+          50%  { background-color: #2563eb; }
+          55%  { background-color: #1d4ed8; }
+          60%  { background-color: #4f46e5; }
+          65%  { background-color: #6366f1; }
+          70%  { background-color: #7c3aed; }
+          75%  { background-color: #9333ea; }
+          80%  { background-color: #c084fc; }
+          85%  { background-color: #db2777; }
+          90%  { background-color: #e11d48; }
+          95%  { background-color: #dc2626; }
+          100% { background-color: #e62e04; }
         }
 
         @media (min-width: 1024px) {
