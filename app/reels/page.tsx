@@ -6,13 +6,13 @@ import { supabase } from '@/lib/supabase';
 // ==================== এম্বেড URL জেনারেটর ====================
 function getEmbedUrl(reel: any) {
   if (reel.platform === 'youtube') {
-    return `https://www.youtube.com/embed/${reel.video_id}?autoplay=1&mute=0&loop=1&playlist=${reel.video_id}&modestbranding=1&controls=0&rel=0&showinfo=0`;
+    return `https://www.youtube.com/embed/${reel.video_id}?autoplay=1&mute=1&loop=1&playlist=${reel.video_id}&modestbranding=1&controls=0&rel=0&showinfo=0`;
   }
   if (reel.platform === 'facebook') {
-    return `https://www.facebook.com/plugins/video.php?href=https://www.facebook.com/reel/${reel.video_id}&show_text=false&autoplay=true&width=476`;
+    return `https://www.facebook.com/plugins/video.php?href=https://www.facebook.com/reel/${reel.video_id}&show_text=false&autoplay=true&width=476&mute=1`;
   }
   if (reel.platform === 'tiktok') {
-    return `https://www.tiktok.com/embed/v2/${reel.video_id}`;
+    return `https://www.tiktok.com/embed/v2/${reel.video_id}?autoplay=1&mute=1`;
   }
   return '';
 }
@@ -30,6 +30,7 @@ export default function ReelsPage() {
   const [loading, setLoading] = useState(true);
   const [productInfo, setProductInfo] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
 
   useEffect(() => {
     supabase.from('reels').select('*').order('id').then(({ data }) => {
@@ -38,7 +39,6 @@ export default function ReelsPage() {
     });
   }, []);
 
-  // বর্তমান রিলের প্রোডাক্ট লোড
   useEffect(() => {
     if (reels.length === 0) return;
     const currentReel = reels[currentIndex];
@@ -49,7 +49,20 @@ export default function ReelsPage() {
     }
   }, [currentIndex, reels]);
 
-  // মোবাইল: স্ক্রল/সোয়াইপ
+  // টাচ সোয়াইপ
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartY.current - e.changedTouches[0].clientY;
+    if (diff > 50 && currentIndex < reels.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    } else if (diff < -50 && currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    }
+  };
+
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     if (e.deltaY > 40 && currentIndex < reels.length - 1) {
@@ -59,7 +72,6 @@ export default function ReelsPage() {
     }
   }, [currentIndex, reels.length]);
 
-  // PC: কি-বোর্ড
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
       e.preventDefault();
@@ -136,7 +148,12 @@ export default function ReelsPage() {
 
       {/* ====== Mobile Layout ====== */}
       <div className="reel-mobile-container">
-        <div ref={containerRef} style={{ position: 'relative', height: '100vh', width: '100%' }}>
+        <div 
+          ref={containerRef}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          style={{ position: 'relative', height: '100vh', width: '100%' }}
+        >
           <div style={{
             transform: `translateY(-${currentIndex * 100}vh)`,
             transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
@@ -144,7 +161,7 @@ export default function ReelsPage() {
             {reels.map((reel, index) => (
               <div key={index} style={{ height: '100vh', position: 'relative', background: '#000' }}>
                 <iframe
-                  src={getEmbedUrl(reel)}
+                  src={index === currentIndex ? getEmbedUrl(reel) : ''}
                   style={{ width: '100%', height: '100%', border: 'none' }}
                   allow="autoplay; fullscreen"
                   allowFullScreen
